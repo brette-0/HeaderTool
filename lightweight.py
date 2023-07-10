@@ -1,6 +1,6 @@
 from zlib import crc32
 from sys import argv
-from requests import get
+from urllib.request import urlretrieve
 
 if __name__ == "__main__":
     if len(argv) <2 or argv[1]=='':
@@ -13,9 +13,11 @@ if __name__ == "__main__":
             rom = rom[16:]
             
         checksum = hex(crc32(rom))
-        header = get(f"https://github.com/BrettefromNesUniverse/HeaderTool/tree/main/headers/{checksum}")
-        if str(get.response.status_code)[0] != "2":
-	        print("No header for this ROM.")
-            exit()
-        with open((header[16:]).decode("utf-8"), "wb") as f:
-            f.write(header[:16]+rom)
+	try:
+		header = urlretrieve("https://github.com/BrettefromNesUniverse/HeaderTool/tree/main/headers", checksum)
+		with open((header[16:]).decode("utf-8"), "wb") as f:
+            		f.write(header[:16]+rom)
+	except: 
+		print("No header for this ROM.")
+            	exit()
+	        
