@@ -20,13 +20,13 @@ if __name__ == "__main__":
             rom = rom[16:]
             
         checksum = hex(crc32(rom))
-        if checksum not in listdir("./headers"):
+        if f"{checksum}.bin" not in listdir("./headers"):
             print("ROM is unrecognized, likely a bad dump.")
             exit()
 
-    with open(f"./headers/{checksum}.bin") as f:
+    with open(f"./headers/{checksum}.bin", "rb") as f:
         payload = f.read()
-        with open((payload[16:]).decode("utf-8"), "wb") as f:
+        with open(f"./output/{(payload[16:]).decode('utf-8')}", "wb") as f:
             f.write(payload[:16]+rom)
 
     
