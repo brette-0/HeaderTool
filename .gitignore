@@ -1,6 +1,4 @@
 *.nes
-*.sfc
-snes
 *process.py
 roms
 headered
