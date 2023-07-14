@@ -14,7 +14,3 @@
 This tool does not contain any sensitive data and exists to allow newcomers to immerse themself in the world of emulation and ROMhacking without committing an act of piracy.
 
 Currently there is only the Python script and it requires the `requests` module to be installed.
-
-
-### Notices:
- - SNES ROMs do not come in headerless forms.
