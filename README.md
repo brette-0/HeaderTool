@@ -6,7 +6,7 @@
 
 
 ### Agenda:
- - Support all Mainstream Consoles
+ - Support all emulator-only headers
  - Function as an executable
  - Allow final GUI with batch instructions
 
