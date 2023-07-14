@@ -12,10 +12,14 @@
 #include <stdint.h>                                             // data types
 
 #include <iostream>                                             // error reporting
+#include <cerrno>                                               // error handling
 
-std::string CalculateChecksum(const std::vector<uint8_t>& buffer){
+#include <fstream>                                              // file handling
+#include <sys/stat.h>                                           // folder handling
+
+std::string CalculateChecksum(const std::vector<uint8_t>& contents){
     uint32_t numeric = crc32(0L, Z_NULL, 0);                    // reseach how this works
-    numeric = crc32(numeric, buffer.data(), buffer.size());     // calculate crc32 obj
+    numeric = crc32(numeric, contents.data(), contents.size());     // calculate crc32 obj
     std::stringstream retval;                                   // create sstream
     retval << "0x" << numeric;                                  // stream contents into it
     return retval.str();                                        // return string filetype (redundant?)
@@ -27,12 +31,34 @@ int main(int argc, char* argv[]){                               // accept sys ar
         return 1;
     }
 
-    // check if arg2 is filepath
-    // we then need to open the filepath and store its contents into some vector
-    std::string rom = CalculateChecksum(buffer);
+    std::string path = argv[1];
+    std::ifstream ROMbuffer(path, std::ios::binary);            // research this
+
+    if (ROMbuffer.is_open()) {                                  // check if file opened
+        std::vector<char> ROM(std::istreambuf_iterator<char>(ROMbuffer), {});   // research this
+        ROMbuffer.close();                                      // close buffer (speed in cpp)
+    } else {
+        std::cerr << "Failed to open ROM";
+        return 1;
+    }
+
+    std::string rom = CalculateChecksum(*ROM);                  // Calculate Filename
     // here we need use curl to acccess the header and good name
     // here we need modify our buffer to insert the header
     // here we write the modified buffer to output/goodname.nes
 
+    if (mkdir("./output", 0777) != 0 && errno != EEXIST) {}     // ensure that ouput dir exists
+
+    std::string goodname = "";                                  // extract goodname from payload
+    std::ofstream outbuffer(goodname);                          // create outbuffer 
+
+    // add check for file exists
+    if (outbuffer.is_open()){
+
+    } else {
+        std::cerr << "Failed to create File";                    // Throw unknown error
+        return 1;
+    }
+    outbuffer << header << ROM;                                 // write contents
     return 0;
 }
