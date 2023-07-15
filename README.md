@@ -6,6 +6,7 @@
 
 
 ### Agenda:
+ - set up script to use built-ins
  - Support all Mainstream Consoles
  - Function as an executable
  - Allow final GUI with batch instructions
