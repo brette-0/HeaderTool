@@ -7,7 +7,6 @@ to the fullest possible without commiting any act of unwanted piracy.
  - Renamed and headers ROMs with python script
 
 ### Agenda:
- - use only built-in modules
  - have functioning exe
  - have GUI and bulk download
 
