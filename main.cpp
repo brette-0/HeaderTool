@@ -31,17 +31,20 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::vector<uint
     data->insert(data->begin(), byteContents, byteContents + totalSize);
     return totalSize;                                           // why return this
 }
-
-
 std::string CalculateChecksum(const uint8_t* contents, std::size_t size){   //research
+    /*
+        Calculates the Checksum for repo fs
+    */
     uint32_t numeric = crc32(0L, Z_NULL, 0);                    // reseach how this works
     numeric = crc32(numeric, contents, size);                   // calculate crc32 obj
     std::stringstream retval;                                   // create sstream
     retval << "0x" << numeric;                                  // stream contents into it
     return retval.str();                                        // return string filetype (redundant?)
 }
-
-std::vector<uint8_t> GetROM(std::string url){
+std::vector<uint8_t> getHDR(std::string url){
+    /*
+        Method to retrieve file from repo
+    */
     std::vector<uint8_t> header;                                // create header object
     CURL* curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());           // not sure
@@ -65,35 +68,30 @@ int main(int argc, char* argv[]){                               // accept sys ar
     std::string path = argv[1];
     std::ifstream ROMbuffer(path, std::ios::binary);            // research this
     std::vector<uint8_t> ROM;
-    if (ROMbuffer.is_open()) {                                  // check if file opened
-        ROM = std::vector<uint8_t>(std::istreambuf_iterator<char>(ROMbuffer), {});
-        ROMbuffer.close();
+    if (!ROMbuffer.is_open()) {                                  // check if file open failed
         std::cerr << "Failed to open ROM";
         return 1;
     }
+    ROM = std::vector<uint8_t>(std::istreambuf_iterator<char>(ROMbuffer), {});
+    ROMbuffer.close();
     std::string romChecksum = CalculateChecksum(ROM.data(), ROM.size());                  // Calculate Filename
-    // here we need use curl to acccess the header and good name
-    // here we need modify our buffer to insert the header
-    // here we write the modified buffer to output/goodname.nes
-
+    if (!romChecksum.length()){                                 // handle 404 (bad dump)
+        std::cerr << "Failed to access ROM, likely bad dump.";
+        return 1;
+    }
     if (mkdir("./output") != 0 && errno != EEXIST) {}           // ensure that ouput dir exists
     std::stringstream target;                                   // set up formatted url
     target << "url" << romChecksum;                             // process data into sstream
-    std::vector<uint8_t> header = GetROM(target.str());         // retrieve data from formatted url
+    std::vector<uint8_t> header = getHDR(target.str());         // retrieve data from formatted url
     std::string headerstr(header.begin(), header.end());        // convert uint vector to str
-    std::string ROMstr(ROM.begin(), ROM.end());
+    std::string ROMstr(ROM.begin(), ROM.end());                 // convert char vector to stsd
+    std::ofstream outbuffer(headerstr.substr(16));              // create outbuffer 
 
-    // extract buffer into streamstring
-    // use offset in ss to extract goodname
-    
-    std::string goodname = headerstr.substr(16);                // extract goodname from payload
-    std::ofstream outbuffer(goodname);                          // create outbuffer 
-
-    // add check for file exists
-    if (!outbuffer.is_open()){
-        std::cerr << "Failed to create File";                    // report unknown error
+    if (!outbuffer.is_open()){                                  // handle unknown error
+        std::cerr << "Failed to create File";
         return 1;
     }
-    outbuffer << (headerstr.substr(0,16) + ROMstr);              // write contents
-    return 0;
+    outbuffer << (headerstr.substr(0,16) + ROMstr);             // write contents
+    outbuffer.close();                                          // operations are finished
+    return 0;                                                   // success
 }
