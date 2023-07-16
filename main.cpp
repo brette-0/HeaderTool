@@ -1,7 +1,10 @@
 /*
-    Drag and Drop, should perform checksum check on given ROM
-    Then it will use that checksum to download data from the githuub repo
-    Finally it will header the rom in the outputs folder and rename it.
+    Criteria:
+        Minimal Filesize
+        Total error handling
+        Drag & Drop functionality
+        header and rename ROM in relative output folder
+        minimal library inclusion
 */
 
 #include <string>                                               // filename
@@ -31,17 +34,16 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::vector<uint
     data->insert(data->begin(), byteContents, byteContents + totalSize);
     return totalSize;                                           // why return this
 }
-std::string CalculateChecksum(const uint8_t* contents, std::size_t size){   //research
+std::string CalculateChecksum(const uint8_t* contents, std::size_t const size){   //research
     /*
         Calculates the Checksum for repo fs
     */
     uint32_t numeric = crc32(0L, Z_NULL, 0);                    // reseach how this works
     numeric = crc32(numeric, contents, size);                   // calculate crc32 obj
     std::stringstream retval;                                   // create sstream
-    retval << "0x" << numeric;                                  // stream contents into it
-    return retval.str();                                        // return string filetype (redundant?)
+    return std::to_string(numeric);                             // return string filetype
 }
-std::vector<uint8_t> getHDR(std::string url){
+std::vector<uint8_t> getHDR(std::string const url){
     /*
         Method to retrieve file from repo
     */
@@ -59,7 +61,7 @@ std::vector<uint8_t> getHDR(std::string url){
     return header;                                              // return header contents
 }
 
-int main(int argc, char* argv[]){                               // accept sys args
+int main(const int argc, const char* argv[]){                               // accept sys args
     if (argc < 2) {                                             // validate args
         std::cerr << "No file path provided." << std::endl;
         return 1;
@@ -81,7 +83,7 @@ int main(int argc, char* argv[]){                               // accept sys ar
     }
     if (mkdir("./output") != 0 && errno != EEXIST) {}           // ensure that ouput dir exists
     std::stringstream target;                                   // set up formatted url
-    target << "url" << romChecksum;                             // process data into sstream
+    target << "https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/0x" << romChecksum << ".bin";                             // process data into sstream
     std::vector<uint8_t> header = getHDR(target.str());         // retrieve data from formatted url
     std::string headerstr(header.begin(), header.end());        // convert uint vector to str
     std::string ROMstr(ROM.begin(), ROM.end());                 // convert char vector to stsd
