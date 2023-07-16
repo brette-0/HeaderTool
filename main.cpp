@@ -8,7 +8,6 @@
 */
 
 #include <string>                                               // filename
-#include <sstream>                                              // modify naming scheme to reduce executable size
 
 #include <zlib.h>                                               // crc32 function
 #include <vector>                                               // big data types
@@ -40,7 +39,6 @@ std::string CalculateChecksum(const uint8_t* contents, std::size_t const size){ 
     */
     uint32_t numeric = crc32(0L, Z_NULL, 0);                    // reseach how this works
     numeric = crc32(numeric, contents, size);                   // calculate crc32 obj
-    std::stringstream retval;                                   // create sstream
     return std::to_string(numeric);                             // return string filetype
 }
 std::vector<uint8_t> getHDR(std::string const url){
@@ -61,7 +59,7 @@ std::vector<uint8_t> getHDR(std::string const url){
     return header;                                              // return header contents
 }
 
-int main(const int argc, const char* argv[]){                               // accept sys args
+int main(const int argc, const char* argv[]){                   // accept sys args
     if (argc < 2) {                                             // validate args
         std::cerr << "No file path provided." << std::endl;
         return 1;
@@ -70,7 +68,7 @@ int main(const int argc, const char* argv[]){                               // a
     std::string path = argv[1];
     std::ifstream ROMbuffer(path, std::ios::binary);            // research this
     std::vector<uint8_t> ROM;
-    if (!ROMbuffer.is_open()) {                                  // check if file open failed
+    if (!ROMbuffer.is_open()) {                                 // check if file open failed
         std::cerr << "Failed to open ROM";
         return 1;
     }
@@ -82,9 +80,7 @@ int main(const int argc, const char* argv[]){                               // a
         return 1;
     }
     if (mkdir("./output") != 0 && errno != EEXIST) {}           // ensure that ouput dir exists
-    std::stringstream target;                                   // set up formatted url
-    target << "https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/0x" << romChecksum << ".bin";                             // process data into sstream
-    std::vector<uint8_t> header = getHDR(target.str());         // retrieve data from formatted url
+    std::vector<uint8_t> header = getHDR("https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/0x" + romChecksum + ".bin");         // retrieve data from formatted url
     std::string headerstr(header.begin(), header.end());        // convert uint vector to str
     std::string ROMstr(ROM.begin(), ROM.end());                 // convert char vector to stsd
     std::ofstream outbuffer(headerstr.substr(16));              // create outbuffer 
