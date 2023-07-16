@@ -71,7 +71,6 @@ int main(int argc, char* argv[]){                               // accept sys ar
         std::cerr << "Failed to open ROM";
         return 1;
     }
-
     std::string romChecksum = CalculateChecksum(ROM.data(), ROM.size());                  // Calculate Filename
     // here we need use curl to acccess the header and good name
     // here we need modify our buffer to insert the header
@@ -82,20 +81,19 @@ int main(int argc, char* argv[]){                               // accept sys ar
     target << "url" << romChecksum;                             // process data into sstream
     std::vector<uint8_t> header = GetROM(target.str());         // retrieve data from formatted url
     std::string headerstr(header.begin(), header.end());        // convert uint vector to str
+    std::string ROMstr(ROM.begin(), ROM.end());
 
     // extract buffer into streamstring
     // use offset in ss to extract goodname
     
-    std::string goodname = "";                                  // extract goodname from payload
+    std::string goodname = headerstr.substr(16);                // extract goodname from payload
     std::ofstream outbuffer(goodname);                          // create outbuffer 
 
     // add check for file exists
-    if (outbuffer.is_open()){
-
-    } else {
-        std::cerr << "Failed to create File";                    // Throw unknown error
+    if (!outbuffer.is_open()){
+        std::cerr << "Failed to create File";                    // report unknown error
         return 1;
     }
-    outbuffer << header << ROM;                                  // write contents
+    outbuffer << (headerstr.substr(0,16) + ROMstr);              // write contents
     return 0;
 }
