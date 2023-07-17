@@ -3,9 +3,11 @@ from sys import argv, exit
 import urllib.request
 from os.path import exists
 from os import mkdir
+import argparse
 
 if __name__ != "__main__": raise Exception("Not Supported!")
 
+@argparse.ArgumentParser(description="Renames and Headers ROMS.")
 def main():
     if len(argv) <2 or argv[1]=='':             # Arg validation
         print("no file specified.")
