@@ -1,1 +1,4 @@
 *.nes
+*.exe
+/Python/dist
+/Python/headertool.egg-info

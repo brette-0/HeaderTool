@@ -6,9 +6,13 @@ to the fullest possible without commiting any act of unwanted piracy.
 ### Current Ability:
  - Renamed and headers ROMs with python script
 
-### Agenda:
- - have functioning exe
- - have GUI and bulk download
+### Windows Agenda:
+ - Have full operability
+ - Have GUI
+ - Support bulk/local operations
+
+### Python Agenda:
+ - Pip Module with CLIs
 
 Note that not all ROMs need headers. Some consoles actually intend for their ROMs to have headers and were created by the developer for functionality.
 However, this is not the case for all consoles like the NES. However, most emulators will be able to play NROM games without a header.
