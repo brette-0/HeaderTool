@@ -2,3 +2,4 @@
 *.exe
 /Python/dist
 /Python/headertool.egg-info
+*__pycache__
