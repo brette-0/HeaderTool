@@ -1,4 +1,4 @@
-# HeaderTool-Python
+# `python build`
 
 This is the documentation for the Python version of HeaderTool, it requires `Python 3.7` at lowest and was designed with `Python 3.11.4` and targets devices that cannot execute the Windows Executable.
 
@@ -8,4 +8,6 @@ This is the documentation for the Python version of HeaderTool, it requires `Pyt
 
 ### Usage:
 
-Drag the unheadered (or poorly headered) NES ROM onto the script or run: `HeaderTool "path/to/ROM.nes"`
+ - Drag & Drop your ROM onto the script
+ - ~~In terminal : `headertool "ROM.nes"`~~
+
