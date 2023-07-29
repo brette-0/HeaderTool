@@ -35,11 +35,10 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::vector<uint
 }
 std::string CalculateChecksum(const uint8_t* contents, std::size_t const size){   //research
     /*
-        Calculates the Checksum for repo fs
+        Calculates the Checksum for repo file layout
     */
     uint32_t numeric = crc32(0L, Z_NULL, 0);                    // reseach how this works
-    numeric = crc32(numeric, contents, size);                   // calculate crc32 obj
-    return std::to_string(numeric);                             // return string filetype
+    return std::to_string(crc32(numeric, contents, size));      // calculate crc32 obj
 }
 std::vector<uint8_t> getHDR(std::string const url){
     /*
@@ -65,26 +64,30 @@ int main(const int argc, const char* argv[]){                   // accept sys ar
         return 1;
     }
 
-    std::string path = argv[1];
-    std::ifstream ROMbuffer(path, std::ios::binary);            // research this
-    std::vector<uint8_t> ROM;
+    std::ifstream ROMbuffer(argv[1], std::ios::binary);         // create binary ifstraem
     if (!ROMbuffer.is_open()) {                                 // check if file open failed
         std::cerr << "Failed to open ROM";
         return 1;
     }
-    ROM = std::vector<uint8_t>(std::istreambuf_iterator<char>(ROMbuffer), {});
-    ROMbuffer.close();
-    std::string romChecksum = CalculateChecksum(ROM.data(), ROM.size());                  // Calculate Filename
+
+    // read ROM file contents from PATH into ROM vector
+    std::vector<uint8_t> ROM = std::vector<uint8_t>(std::istreambuf_iterator<char>(ROMbuffer), std::istreambuf_iterator<char>());
+    ROMbuffer.close();                                          // close ifstream
+
+    // calculate file checksu as string, for filename.
+    std::string romChecksum = CalculateChecksum(ROM.data(), ROM.size());
     if (!romChecksum.length()){                                 // handle 404 (bad dump)
         std::cerr << "Failed to access ROM, likely bad dump.";
         return 1;
     }
     if (mkdir("./output") != 0 && errno != EEXIST) {}           // ensure that ouput dir exists
-    std::vector<uint8_t> header = getHDR("https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/0x" + romChecksum + ".bin");         // retrieve data from formatted url
+    std::vector<uint8_t> header = getHDR("https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/0x" + romChecksum + ".bin");
     std::string headerstr(header.begin(), header.end());        // convert uint vector to str
     std::string ROMstr(ROM.begin(), ROM.end());                 // convert char vector to stsd
+    delete &ROM;                                                // clear dynamic memory
     std::ofstream outbuffer(headerstr.substr(16));              // create outbuffer 
 
+    
     if (!outbuffer.is_open()){                                  // handle unknown error
         std::cerr << "Failed to create File";
         return 1;

@@ -17,9 +17,9 @@ def main():
         rom = f.read()
         if len(rom)&0x10: rom = rom[16:]        # remove header if present
             
-        checksum = hex(crc32(rom))              # calculate headerless ROm
+        checksum = crc32(rom)                   # calculate headerless ROm
 
-    header = urllib.request.urlopen(f"https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/{checksum}.bin")
+    header = urllib.request.urlopen(f"https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/{checksum}")
     if header.status != 200:                    # retrieve file, and if succesful
         print("No header for this ROM.")
         exit()
