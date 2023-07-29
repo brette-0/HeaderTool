@@ -33,13 +33,6 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::vector<uint
     data->insert(data->begin(), byteContents, byteContents + totalSize);
     return totalSize;                                           // why return this
 }
-std::string CalculateChecksum(const uint8_t* contents, std::size_t const size){   //research
-    /*
-        Calculates the Checksum for repo file layout
-    */
-    uint32_t numeric = crc32(0L, Z_NULL, 0);                    // reseach how this works
-    return std::to_string(crc32(numeric, contents, size));      // calculate crc32 obj
-}
 std::vector<uint8_t> getHDR(std::string const url){
     /*
         Method to retrieve file from repo
@@ -75,16 +68,11 @@ int main(const int argc, const char* argv[]){                   // accept sys ar
     ROMbuffer.close();                                          // close ifstream
 
     // calculate file checksu as string, for filename.
-    std::string romChecksum = CalculateChecksum(ROM.data(), ROM.size());
-    if (!romChecksum.length()){                                 // handle 404 (bad dump)
-        std::cerr << "Failed to access ROM, likely bad dump.";
-        return 1;
-    }
+    std::string romChecksum = std::to_string(crc32(0, ROM.data(), ROM.size()));
     if (mkdir("./output") != 0 && errno != EEXIST) {}           // ensure that ouput dir exists
-    std::vector<uint8_t> header = getHDR("https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/0x" + romChecksum + ".bin");
+    std::vector<uint8_t> header = getHDR("https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/" + romChecksum);
     std::string headerstr(header.begin(), header.end());        // convert uint vector to str
     std::string ROMstr(ROM.begin(), ROM.end());                 // convert char vector to stsd
-    delete &ROM;                                                // clear dynamic memory
     std::ofstream outbuffer(headerstr.substr(16));              // create outbuffer 
 
     
