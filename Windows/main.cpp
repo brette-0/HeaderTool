@@ -38,29 +38,43 @@ std::vector<uint8_t> getHDR(std::string const url){
         Method to retrieve file from repo
     */
     std::vector<uint8_t> header;                                // create header object
-    CURL* curl = curl_easy_init();
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());           // not sure
+    CURL* curl = curl_easy_init();                              // research
+    if (!curl) {                                                // if curl failed to initialize
+        // report fatal error within programme
+        std::cerr << "Failed to initialize libcurl." << std::endl;
+        std::cin.ignore();                                      // wait for user input
+        return {};                                              // return empty vector for error
+    }
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());           // research
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &header);
 
-    CURLcode res = curl_easy_perform(curl);
+    CURLcode res = curl_easy_perform(curl);                     // research
     if (res != CURLE_OK) {
-    std::cerr << "Access Failure, likely bad Dump" << curl_easy_strerror(res) << std::endl;
-    return {};}                                                 // return empty vector
-    
+        uint16_t httpCode = 0;                                  // initialize status code variable
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+        if (httpCode == 404) {                                  // if file not found
+            std::cerr << "Access Failure, likely bad Dump: HeaderTool only supports NES roms ending `.nes`" << std::endl;
+        } else {                                                // otherwise unknown network error
+            std::cerr << "Access Failure, Unknown reason: Check your network connection status or troubleshoot" << curl_easy_strerror(res) << std::endl;
+        }
+        return {};}                                             // return empty vector
+    curl_easy_cleanup(curl);                                    // Cleanup libcurl handle
     return header;                                              // return header contents
 }
 
 int main(const int argc, const char* argv[]){                   // accept sys args
     if (argc < 2) {                                             // validate args
-        std::cerr << "No file path provided." << std::endl;
-        return 1;
+        std::cerr << "No file path provided." << std::endl;     // alert player of no PATH arg
+        std::cin.ignore();                                      // wait for user input
+        return 1;                                               // leave with exit code 1
     }
 
     std::ifstream ROMbuffer(argv[1], std::ios::binary);         // create binary ifstraem
     if (!ROMbuffer.is_open()) {                                 // check if file open failed
-        std::cerr << "Failed to open ROM";
-        return 1;
+        std::cerr << "Failed to open ROM";                      // report file access error
+        std::cin.ignore();                                      // wait for user input
+        return 1;                                               // leave with exit code 1
     }
 
     // read ROM file contents from PATH into ROM vector
@@ -71,6 +85,10 @@ int main(const int argc, const char* argv[]){                   // accept sys ar
     std::string romChecksum = std::to_string(crc32(0, ROM.data(), ROM.size()));
     if (mkdir("./output") != 0 && errno != EEXIST) {}           // ensure that ouput dir exists
     std::vector<uint8_t> header = getHDR("https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/" + romChecksum);
+    if (!header.size()){                                        // if we got emtpy results
+        std::cin.ignore();                                      // wait for user input
+        return 1;                                               // leave with exit code 1
+    }
     std::string headerstr(header.begin(), header.end());        // convert uint vector to str
     std::string ROMstr(ROM.begin(), ROM.end());                 // convert char vector to stsd
     std::ofstream outbuffer(headerstr.substr(16));              // create outbuffer 
@@ -82,5 +100,7 @@ int main(const int argc, const char* argv[]){                   // accept sys ar
     }
     outbuffer << (headerstr.substr(0,16) + ROMstr);             // write contents
     outbuffer.close();                                          // operations are finished
-    return 0;                                                   // success
+    std::cout << "Successfully headered ROM!";                  // declare success
+    std::cin.ignore();                                          // wait for user input
+    return 0;                                                   // leave with exit code 0
 }
