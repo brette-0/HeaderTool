@@ -6,11 +6,15 @@
 			"label": "C/C++: gcc.exe build active file",
 			"command": "C:\\msys64\\mingw64\\bin\\gcc.exe",
 			"args": [
+				"-std=c++11",  // Add this flag to specify the C++11 standard
 				"-fdiagnostics-color=always",
 				"-g",
 				"${file}",
 				"-o",
-				"${fileDirname}\\headertool.exe"
+				"${fileDirname}\\headertool.exe",
+				"-lcurl",
+				"-lstdc++",  // Add this flag to link against the C++ standard library
+				"-lz",  // Add this flag to link against the zlib library
 			],
 			"options": {
 				"cwd": "${fileDirname}"

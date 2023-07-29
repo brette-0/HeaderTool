@@ -83,7 +83,7 @@ int main(const int argc, const char* argv[]){                   // accept sys ar
     }
     std::string headerstr(header.begin(), header.end());        // convert uint vector to str
     std::string ROMstr(ROM.begin(), ROM.end());                 // convert char vector to stsd
-    std::ofstream outbuffer(headerstr.substr(16));              // create outbuffer 
+    std::ofstream outbuffer("./output/" + headerstr.substr(16));// create outbuffer 
 
     
     if (!outbuffer.is_open()){                                  // handle unknown error
@@ -93,7 +93,5 @@ int main(const int argc, const char* argv[]){                   // accept sys ar
     }
     outbuffer << (headerstr.substr(0,16) + ROMstr);             // write contents
     outbuffer.close();                                          // operations are finished
-    std::cout << "Successfully headered ROM!";                  // declare success
-    std::cin.ignore();                                          // wait for user input
     return 0;                                                   // leave with exit code 0
 }
