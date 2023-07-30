@@ -3,18 +3,19 @@
 	"tasks": [
 		{
 			"type": "cppbuild",
-			"label": "C/C++: gcc.exe build active file",
+			"label": "build x64",
 			"command": "C:\\msys64\\mingw64\\bin\\gcc.exe",
 			"args": [
-				"-std=c++11",  // Add this flag to specify the C++11 standard
+				"-m64",   
+				"-std=c++11",  
 				"-fdiagnostics-color=always",
 				"-g",
 				"${file}",
 				"-o",
-				"${fileDirname}\\headertool.exe",
+				"${fileDirname}\\64 bit\\headertool.exe",
 				"-lcurl",
-				"-lstdc++",  // Add this flag to link against the C++ standard library
-				"-lz",  // Add this flag to link against the zlib library
+				"-lstdc++",  
+				"-lz",  
 			],
 			"options": {
 				"cwd": "${fileDirname}"
@@ -24,6 +25,31 @@
 			],
 			"group": "build",
 			"detail": "compiler: C:\\msys64\\mingw64\\bin\\gcc.exe"
+		},
+		{
+			"type": "cppbuild",
+			"label": "build x86",
+			"command": "C:\\msys64\\mingw32\\bin\\gcc.exe",
+			"args": [
+				"-m32",   
+				"-std=c++11",  
+				"-fdiagnostics-color=always",
+				"-g",
+				"${file}",
+				"-o",
+				"${fileDirname}\\32 bit\\headertool.exe",
+				"-lcurl",
+				"-lstdc++",  
+				"-lz",  
+			],
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build",
+			"detail": "compiler: C:\\msys64\\mingw32\\bin\\gcc.exe"
 		}
 	]
 }
