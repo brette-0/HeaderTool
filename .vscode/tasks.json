@@ -41,6 +41,7 @@
 				"-lcurl",
 				"-lstdc++",  
 				"-lz",  
+				"-D_WIN32_WINNT=0x0601",   // Set Windows 7 as the minimum target version
 			],
 			"options": {
 				"cwd": "${fileDirname}"

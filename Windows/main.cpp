@@ -1,10 +1,6 @@
 /*
     Criteria:
-        Minimal Filesize
-        Total error handling
-        Drag & Drop functionality
-        header and rename ROM in relative output folder
-        minimal library inclusion
+        Graphical User Interface
 */
 
 #include <iostream>
@@ -68,21 +64,31 @@ int getheader(const std::string path){
 
     // calculate file checksu as string, for filename.
     std::string romChecksum = std::to_string(crc32(0, reinterpret_cast<const Bytef*>(ROM.data()), ROM.size()));
-    if (mkdir("./output") != 0 && errno != EEXIST) {}           // ensure that ouput dir exists
+    if (mkdir("./output") == 1 && errno != EEXIST) {}           // ensure that ouput dir exists
     std::vector<char> header = getHDR("https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/" + romChecksum);
     if (!header.size()){                                        // if we got emtpy results
         return 1;                                               // leave with exit code 1
     }
     std::string headerstr(header.begin(), header.end());        // convert uint vector to str
+    if (!static_cast<unsigned char>(header[0])){                // if header quantity is non-zero
+        if (static_cast<unsigned char>(header[0]) == 0xff){     // check for error signature 
+            // report that this ROM has no header and thus cannot be helped
+            std::cerr << "This ROM has no valid header, however the ROM raises no checksum errors." << std::endl;
+            return 1;                                           // leave with exit code 1
+        }
+        // this will be added if it is an actual issue
+        std::cerr << "Currently there is no added support for multi-header ROMs." << std::endl;
+        return 1;                                               // leave with exit code 1
+    }
     std::string ROMstr(ROM.begin(), ROM.end());                 // convert char vector to stsd
-    std::ofstream outbuffer("./output/" + headerstr.substr(16));// create outbuffer 
+    std::ofstream outbuffer("./output/" + headerstr.substr(17));// create outbuffer 
 
     
     if (!outbuffer.is_open()){                                  // handle unknown error
         std::cerr << "Failed to create File";                   // report fatal error
         return 1;
     }
-    outbuffer << (headerstr.substr(0,16) + ROMstr);             // write contents
+    outbuffer << (headerstr.substr(1,17) + ROMstr);             // write contents
     outbuffer.close();                                          // operations are finished
     return 0;
 }
@@ -95,7 +101,14 @@ int main(const int argc, const char* argv[]){                   // accept sys ar
     }
     long int errors = 0;
     for (int arg = 1; arg < argc; arg++){
-        errors += getheader(argv[arg]);
+        
+        bool error = getheader(argv[arg]);
+        if (error) {
+            std::cerr << "Failed job: " << argv[arg] << std::endl;
+        } else {
+            std::cout << "Succeeded job: " << argv[arg] << std::endl;
+        }
+        errors += error;
     }
     // report quantity of failed and total jobs
     std::cout << "Headering finished with " << std::to_string(errors) << " fails out of " << std::to_string(argc - 1) << " jobs.";
