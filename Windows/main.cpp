@@ -21,7 +21,7 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::vector<char
     data->insert(data->begin(), byteContents, byteContents + totalSize);
     return totalSize;                                           // why return this
 }
-std::vector<char> getHDR(std::string const url){
+std::string getHDR(std::string const url){
     /*
         Method to retrieve file from repo
     */
@@ -48,7 +48,7 @@ std::vector<char> getHDR(std::string const url){
         curl_easy_cleanup(curl);
         return {};}                                             // return empty vector
     curl_easy_cleanup(curl);                                    // Cleanup libcurl handle
-    return header;                                              // return header contents
+    return std::string (header.begin(), header.end());          // return header contents
 }
 
 int getheader(const std::string path){
@@ -65,12 +65,11 @@ int getheader(const std::string path){
     // calculate file checksu as string, for filename.
     std::string romChecksum = std::to_string(crc32(0, reinterpret_cast<const Bytef*>(ROM.data()), ROM.size()));
     if (mkdir("./output") == 1 && errno != EEXIST) {}           // ensure that ouput dir exists
-    std::vector<char> header = getHDR("https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/" + romChecksum);
+    std::string header = getHDR("https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/" + romChecksum);
     if (!header.size()){                                        // if we got emtpy results
         return 1;                                               // leave with exit code 1
     }
-    std::string headerstr(header.begin(), header.end());        // convert uint vector to str
-    if (!static_cast<unsigned char>(header[0])){                // if header quantity is non-zero
+    if (static_cast<unsigned char>(header[0])){                // if header quantity is non-zero
         if (static_cast<unsigned char>(header[0]) == 0xff){     // check for error signature 
             // report that this ROM has no header and thus cannot be helped
             std::cerr << "This ROM has no valid header, however the ROM raises no checksum errors." << std::endl;
@@ -81,15 +80,19 @@ int getheader(const std::string path){
         return 1;                                               // leave with exit code 1
     }
     std::string ROMstr(ROM.begin(), ROM.end());                 // convert char vector to stsd
-    std::ofstream outbuffer("./output/" + headerstr.substr(17));// create outbuffer 
+    std::ofstream outbuffer("./output/" + header.substr(17));// create outbuffer 
 
     
     if (!outbuffer.is_open()){                                  // handle unknown error
         std::cerr << "Failed to create File";                   // report fatal error
         return 1;
     }
-    outbuffer << (headerstr.substr(1,17) + ROMstr);             // write contents
-    outbuffer.close();                                          // operations are finished
+    //outbuffer << (header.substr(1,16) + ROMstr);             // write contents
+    //outbuffer.close();                                          // operations are finished
+    //std::cout << header.substr(1,16) << std::endl;
+    outbuffer.write(header.substr(1,16).c_str(), 16);          // write header
+    outbuffer.write(ROM.data(), ROM.size());                   // write ROM contents
+    outbuffer.close();    
     return 0;
 }
 

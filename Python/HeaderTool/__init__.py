@@ -7,8 +7,7 @@ import argparse
 
 if __name__ != "__main__": raise Exception("Not Supported!")
 
-@argparse.ArgumentParser(description="Renames and Headers ROMS.")
-def main():
+def main(argv):
     if len(argv) <2 or argv[1]=='':             # Arg validation
         print("no file specified.")
         exit()
