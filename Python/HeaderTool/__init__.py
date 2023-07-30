@@ -24,11 +24,10 @@ def main(argv):
         exit()
     
     header = header.read()
-    if header[0] == 0xff: print("This ROM has no valid header, however the ROM raises no checksum errors.")
-    elif header[0] != 0x00: print("Currently there is no added support for multi-header ROMs.")
-    else:
-        if not exists("./output"): mkdir("output")  # create output dir if not present
-        with open(f"./output/{header[17:].decode('utf-8')}", "wb") as f:
-            f.write(header[1:17] + rom)              # write renamed headered ROM with no-intro good name
+
+    if not exists("./output"): mkdir("output")  # create output dir if not present
+    with open(f"./output/{header[16:].decode('utf-8')}", "wb") as f:
+        if header[:16] != b"\x00"*16:
+            f.write(header[:16] + rom)              # write renamed headered ROM with no-intro good name
         
 main(argv)                                      #Support drag and drop
