@@ -11,6 +11,7 @@
 #include <sys/stat.h>                                           // folder handling
 #include <curl/curl.h>                                          // access files
 #include <cstdlib>                                              // error display 
+#include <filesystem>                                           // recurse dir
 
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::vector<char>* data) {
     /*
@@ -38,20 +39,21 @@ std::vector<char> getHDR(std::string const url){
 
     CURLcode res = curl_easy_perform(curl);                     // research
     if (res != CURLE_OK) {
-        long httpCode = 0;                                      // initialize status code variable
-        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
-        if (httpCode == 404) {                                  // if file not found
-            std::cerr << "Access Failure, likely bad Dump: HeaderTool only supports NES roms ending `.nes`" << std::endl;
-        } else {                                                // otherwise unknown network error
-            std::cerr << "Access Failure, Unknown reason: Check your network connection status or troubleshoot" << std::endl;
-        }
+        std::cerr << "Access Failure, Unknown reason: Check your network connection status or troubleshoot" << std::endl;
         curl_easy_cleanup(curl);
         return {};}                                             // return empty vector
     curl_easy_cleanup(curl);                                    // Cleanup libcurl handle
+    if (std::string (header.begin(),header.end()) == "404: Not Found"){
+        std::cerr << "Access Failure, likely bad Dump: HeaderTool only supports NES roms ending `.nes`" << std::endl;
+        return {};                                              // return empty vector
+    }
     return header;                                              // return header contents
 }
 
 int getheader(const std::string path){
+    /*
+        Focal function called on per-arg from main
+    */
     std::ifstream ROMbuffer(path, std::ios::binary);            // create binary ifstraem
     if (!ROMbuffer.is_open()) {                                 // check if file open failed
         std::cerr << "Failed to open ROM";                      // report file access error
@@ -69,41 +71,47 @@ int getheader(const std::string path){
     if (!header.size()){                                        // if we got emtpy results
         return 1;                                               // leave with exit code 1
     }
-    std::string headerstr(header.begin(), header.end());        // convert uint vector to str
-    std::cout << headerstr.substr(0,16); 
-    std::cout << std::endl << headerstr.substr(16);
-    std::string ROMstr(ROM.begin(), ROM.end());                 // convert char vector to stsd
-    std::ofstream outbuffer("./output/" + headerstr.substr(16), std::ios::binary);// create outbuffer 
+    std::string goodname(header.begin()+16,header.end());    // convert char vector to str
+    std::ofstream outbuffer("./output/" + goodname, std::ios::binary); 
 
     
     if (!outbuffer.is_open()){                                  // handle unknown error
-        std::cerr << "Failed to create File";                   // report fatal error
+        std::cerr << "Failed to create File" << std::endl;      // report fatal error
         return 1;
     }
-    //outbuffer << (headerstr.substr(0,16) + ROMstr);             // write contents
-    //outbuffer.close();                                          // operations are finished
-    outbuffer.write(header.data(), 16);        // Write the first 16 bytes of the header
-    outbuffer.write(ROM.data(), ROM.size());   // Write the ROM contents
-    outbuffer.close();
+    if (header[0]) {                                            // if header begins with non-zero
+        outbuffer.write(header.data(), 16);                     // write header if applicable
+    }
+    else {
+        // if header is zero, implied empty header means log no-header and apply goodname
+        std::clog << "No header for this ROM, goodname will be applied";
+    }
+    outbuffer.write(ROM.data(), ROM.size());                    // followed by ROM
+    outbuffer.close();                                          // operations are finished
     return 0;
 }
 
+
+
 int main(const int argc, const char* argv[]){                   // accept sys args
+    /*
+        Main Function to process sys args
+    */
     if (argc < 2) {                                             // validate args
         std::cerr << "No file path provided." << std::endl;     // alert player of no PATH arg
         system("pause");                                        // wait for user input
         return 1;                                               // leave with exit code 1
     }
-    long int errors = 0;
-    for (int arg = 1; arg < argc; arg++){
+    long int errors = 0;                                        // track rate of failure
+    for (int arg = 1; arg < argc; arg++){                       // for enum of args
         
-        bool error = getheader(argv[arg]);
-        if (error) {
+        bool error = getheader(argv[arg]);                      // get current job failure
+        if (error) {                                            // report failure
             std::cerr << "Failed job: " << argv[arg] << std::endl;
-        } else {
+        } else {                                                // report success
             std::cout << "Succeeded job: " << argv[arg] << std::endl;
         }
-        errors += error;
+        errors += error;                                        // include current job in sum
     }
     // report quantity of failed and total jobs
     std::cout << "Headering finished with " << std::to_string(errors) << " fails out of " << std::to_string(argc - 1) << " jobs.";

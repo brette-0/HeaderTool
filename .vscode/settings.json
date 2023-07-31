@@ -49,6 +49,8 @@
         "fstream": "cpp",
         "codecvt": "cpp",
         "ctime": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "ratio": "cpp",
+        "iomanip": "cpp"
     }
 }
