@@ -13,6 +13,24 @@
 #include <cstdlib>                                              // error display 
 #include <filesystem>                                           // recurse dir
 
+namespace fs = std::filesystem;
+
+long int recursedir(const fs::path& path){
+    /*
+        recursive file directory mapping
+    */
+    long int errors = 0;                                        // store error count
+    for (const auto& entry : fs::directory_iterator(path)) {    // for path in path
+        if (fs::is_directory(entry)) {                          // if subpath is subdir
+            errors += recursedir(entry.path());                 // map subdir
+        }
+        else {                                                  // otherwise if file
+            errors += getheader(entry.path());                  // header file
+        }
+    }
+    return errors;                                              // return error count
+}
+
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::vector<char>* data) {
     /*
         Function to accept each byte from libcurl file retrieval
@@ -50,7 +68,7 @@ std::vector<char> getHDR(std::string const url){
     return header;                                              // return header contents
 }
 
-int getheader(const std::string path){
+int getheader(const std::filesystem::path path){
     /*
         Focal function called on per-arg from main
     */
@@ -104,14 +122,21 @@ int main(const int argc, const char* argv[]){                   // accept sys ar
     }
     long int errors = 0;                                        // track rate of failure
     for (int arg = 1; arg < argc; arg++){                       // for enum of args
-        
-        bool error = getheader(argv[arg]);                      // get current job failure
+
+        bool error;                                             // prepare access scope 
+        if (fs::is_directory(fs::path(argv[arg]))){
+            errors += recursedir(fs::path(argv[arg]));
+        }
+        else {
+            bool error = getheader(fs::path(argv[arg]));        // get success
+            errors += error;                                    // include current job in sum
+        }                    
         if (error) {                                            // report failure
             std::cerr << "Failed job: " << argv[arg] << std::endl;
         } else {                                                // report success
             std::cout << "Succeeded job: " << argv[arg] << std::endl;
         }
-        errors += error;                                        // include current job in sum
+        
     }
     // report quantity of failed and total jobs
     std::cout << "Headering finished with " << std::to_string(errors) << " fails out of " << std::to_string(argc - 1) << " jobs.";

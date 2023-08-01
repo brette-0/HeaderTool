@@ -8,18 +8,18 @@ import argparse
 if __name__ != "__main__": raise Exception("Not Supported!")
 
 jobs = 0
-def recursedir(argv : str)-> int:
+def recursedir(path : str)-> int:
     """
         Function to recurse through a given folder with depth limit limit depth
     """
     
     global jobs
     errors = 0                                  # intialize error count
-    for arg in listdir(argv):                   # loop list
-        if isdir(f"./{argv}/{arg}"):                          # recurse and header roms in subdirectory
-            errors += recursedir(f"./{argv}/{arg}")
+    for subpath in listdir(path):                   # loop list
+        if isdir(f"./{path}/{subpath}"):            # recurse and header roms in subdirectory
+            errors += recursedir(f"./{path}/{subpath}")
         else:                                   # elsewise header current ROM
-            errors += getheader(f"./{argv}/{arg}")
+            errors += getheader(f"./{path}/{subpath}")
             jobs += 1
     return errors                               # return error count
 
@@ -47,7 +47,8 @@ def main(argv):
         exit()
     errors = 0
     for arg in argv[1:]:
-        errors += recursedir(arg)
+        if isdir(arg): errors += recursedir(arg)
+        else: getheader(arg); jobs += 1
     print(f"Headering finished with {errors} fails out of {jobs}.")
     system("pause")
         
