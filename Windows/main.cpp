@@ -1,7 +1,6 @@
 /*
     Criteria:
         Graphical User Interface
-        Depth limit handling
 */
 
 #include <iostream>
@@ -103,12 +102,19 @@ long int recursedir(const fs::path& path){
     */
 
     long int errors = 0;                                        // store error count
+    bool error;                                                 // initalize error
     for (const auto& entry : fs::directory_iterator(path)) {    // for path in path
         if (fs::is_directory(entry)) {                          // if subpath is subdir
             errors += recursedir(entry.path());                 // map subdir
         }
         else {                                                  // otherwise if file
-            errors += getheader(entry.path());                  // header file
+            error = getheader(entry.path());                    // header file
+            if (error) {                                        // report failure
+                std::cerr << "Failed job: " << entry << std::endl;
+            } else {                                            // report success
+                std::cout << "Succeeded job: " << entry << std::endl;
+            }
+            errors += error;                                    // include current job in sum
         }
     }
     return errors;                                              // return error count
@@ -133,13 +139,13 @@ int main(const int argc, const char* argv[]){                   // accept sys ar
         }
         else {
             error = getheader(fs::path(argv[arg]));             // get success
+            if (error) {                                        // report failure
+                std::cerr << "Failed job: " << argv[arg] << std::endl;
+            } else {                                            // report success
+                std::cout << "Succeeded job: " << argv[arg] << std::endl;
+            }
             errors += error;                                    // include current job in sum
         }                    
-        if (error) {                                            // report failure
-            std::cerr << "Failed job: " << argv[arg] << std::endl;
-        } else {                                                // report success
-            std::cout << "Succeeded job: " << argv[arg] << std::endl;
-        }
         
     }
     // report quantity of failed and total jobs
