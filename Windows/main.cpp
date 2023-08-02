@@ -59,7 +59,7 @@ int getheader(const fs::path path){
     */
 
     jobs++;                                                     // increment job counter
-    std::ifstream ROMbuffer(path, std::ios::binary);            // create binary ifstraem
+    std::ifstream ROMbuffer(path, std::ios::binary);            // create binary ifstream
     if (!ROMbuffer.is_open()) {                                 // check if file open failed
         std::cerr << "Failed to open ROM";                      // report file access error
         return 1;                                               // leave with exit code 1
@@ -69,14 +69,14 @@ int getheader(const fs::path path){
     std::vector<char> ROM = std::vector<char>(std::istreambuf_iterator<char>(ROMbuffer), std::istreambuf_iterator<char>());
     ROMbuffer.close();                                          // close ifstream
 
-    // calculate file checksu as string, for filename.
+    // calculate file checksum as string, for filename.
     std::string romChecksum = std::to_string(crc32(0, reinterpret_cast<const Bytef*>(ROM.data()), ROM.size()));
     if (mkdir("./output") != 0 && errno != EEXIST) {}           // ensure that ouput dir exists
     std::vector<char> header = getHDR("https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/" + romChecksum);
     if (!header.size()){                                        // if we got emtpy results
         return 1;                                               // leave with exit code 1
     }
-    std::string goodname(header.begin()+16,header.end());    // convert char vector to str
+    std::string goodname(header.begin()+16,header.end());       // convert char vector to str
     std::ofstream outbuffer("./output/" + goodname, std::ios::binary); 
 
     
