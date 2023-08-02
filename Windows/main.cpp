@@ -15,6 +15,7 @@
 #include <filesystem>                                           // recurse dir
 
 namespace fs = std::filesystem;
+long int jobs = 0;                                              // create global job count
 
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::vector<char>* data) {
     /*
@@ -57,6 +58,8 @@ int getheader(const fs::path path){
     /*
         Focal function called on per-arg from main
     */
+
+    jobs++;                                                     // increment job counter
     std::ifstream ROMbuffer(path, std::ios::binary);            // create binary ifstraem
     if (!ROMbuffer.is_open()) {                                 // check if file open failed
         std::cerr << "Failed to open ROM";                      // report file access error
@@ -121,7 +124,7 @@ int main(const int argc, const char* argv[]){                   // accept sys ar
         system("pause");                                        // wait for user input
         return 1;                                               // leave with exit code 1
     }
-    long int errors = 0;                                        // track rate of failure
+    long int errors = 0;                                        // track rate of failure and jobs
     for (int arg = 1; arg < argc; arg++){                       // for enum of args
 
         bool error;                                             // prepare access scope 
@@ -140,7 +143,7 @@ int main(const int argc, const char* argv[]){                   // accept sys ar
         
     }
     // report quantity of failed and total jobs
-    std::cout << "Headering finished with " << std::to_string(errors) << " fails out of " << std::to_string(argc - 1) << " jobs.";
+    std::cout << "Headering finished with " << std::to_string(errors) << " fails out of " << std::to_string(jobs) << " jobs.";
     system("pause");                                            // wait for user input
     return 0;                                                   // leave with exit code 0
 }
