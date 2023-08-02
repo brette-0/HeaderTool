@@ -7,7 +7,7 @@
 			"command": "C:\\msys64\\mingw64\\bin\\gcc.exe",
 			"args": [
 				"-m64",   
-				"-std=c++11",  
+				"-std=c++17",  
 				"-fdiagnostics-color=always",
 				"-g",
 				"${file}",
@@ -32,7 +32,7 @@
 			"command": "C:\\msys64\\mingw32\\bin\\gcc.exe",
 			"args": [
 				"-m32",   
-				"-std=c++11",  
+				"-std=c++17",  
 				"-fdiagnostics-color=always",
 				"-g",
 				"${file}",

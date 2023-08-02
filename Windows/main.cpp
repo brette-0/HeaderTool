@@ -1,6 +1,7 @@
 /*
     Criteria:
         Graphical User Interface
+        Depth limit handling
 */
 
 #include <iostream>
@@ -14,22 +15,6 @@
 #include <filesystem>                                           // recurse dir
 
 namespace fs = std::filesystem;
-
-long int recursedir(const fs::path& path){
-    /*
-        recursive file directory mapping
-    */
-    long int errors = 0;                                        // store error count
-    for (const auto& entry : fs::directory_iterator(path)) {    // for path in path
-        if (fs::is_directory(entry)) {                          // if subpath is subdir
-            errors += recursedir(entry.path());                 // map subdir
-        }
-        else {                                                  // otherwise if file
-            errors += getheader(entry.path());                  // header file
-        }
-    }
-    return errors;                                              // return error count
-}
 
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::vector<char>* data) {
     /*
@@ -68,7 +53,7 @@ std::vector<char> getHDR(std::string const url){
     return header;                                              // return header contents
 }
 
-int getheader(const std::filesystem::path path){
+int getheader(const fs::path path){
     /*
         Focal function called on per-arg from main
     */
@@ -109,12 +94,28 @@ int getheader(const std::filesystem::path path){
     return 0;
 }
 
+long int recursedir(const fs::path& path){
+    /*
+        recursive file directory mapping
+    */
 
+    long int errors = 0;                                        // store error count
+    for (const auto& entry : fs::directory_iterator(path)) {    // for path in path
+        if (fs::is_directory(entry)) {                          // if subpath is subdir
+            errors += recursedir(entry.path());                 // map subdir
+        }
+        else {                                                  // otherwise if file
+            errors += getheader(entry.path());                  // header file
+        }
+    }
+    return errors;                                              // return error count
+}
 
 int main(const int argc, const char* argv[]){                   // accept sys args
     /*
         Main Function to process sys args
     */
+   
     if (argc < 2) {                                             // validate args
         std::cerr << "No file path provided." << std::endl;     // alert player of no PATH arg
         system("pause");                                        // wait for user input
@@ -128,7 +129,7 @@ int main(const int argc, const char* argv[]){                   // accept sys ar
             errors += recursedir(fs::path(argv[arg]));
         }
         else {
-            bool error = getheader(fs::path(argv[arg]));        // get success
+            error = getheader(fs::path(argv[arg]));             // get success
             errors += error;                                    // include current job in sum
         }                    
         if (error) {                                            // report failure
