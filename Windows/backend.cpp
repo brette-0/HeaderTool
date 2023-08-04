@@ -1,8 +1,3 @@
-/*
-    Criteria:
-        Graphical User Interface
-*/
-
 #include <iostream>
 #include <string>                                               // filename
 #include <zlib.h>                                               // crc32 function
@@ -30,22 +25,22 @@ std::vector<char> getHDR(std::string const url){
         Method to retrieve file from repo
     */
     std::vector<char> header;                                   // create header object
-    CURL* curl = curl_easy_init();                              // research
-    if (!curl) {                                                // if curl failed to initialize
+    CURL* headercurl = curl_easy_init();                        // curl initialization
+    if (!headercurl) {                                          // if curl failed to initialize
         // report fatal error within programme
         std::cerr << "Failed to initialize libcurl." << std::endl;
         return {};                                              // return empty vector for error
     }
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());           // research
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &header);
+    curl_easy_setopt(headercurl, CURLOPT_URL, url.c_str());      
+    curl_easy_setopt(headercurl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(headercurl, CURLOPT_WRITEDATA, &header);
 
-    CURLcode res = curl_easy_perform(curl);                     // research
+    CURLcode res = curl_easy_perform(headercurl);               // Cleanup libcurl handle          
     if (res != CURLE_OK) {
         std::cerr << "Access Failure, Unknown reason: Check your network connection status or troubleshoot" << std::endl;
-        curl_easy_cleanup(curl);
+        curl_easy_cleanup(headercurl);
         return {};}                                             // return empty vector
-    curl_easy_cleanup(curl);                                    // Cleanup libcurl handle
+    curl_easy_cleanup(headercurl);                              // Cleanup libcurl handle
     if (std::string (header.begin(),header.end()) == "404: Not Found"){
         std::cerr << "Access Failure, likely bad Dump: HeaderTool only supports NES roms ending `.nes`" << std::endl;
         return {};                                              // return empty vector
@@ -107,7 +102,7 @@ long int recursedir(const fs::path& path){
         if (fs::is_directory(entry)) {                          // if subpath is subdir
             errors += recursedir(entry.path());                 // map subdir
         }
-        else {                                                  // otherwise if file
+        else if (entry.path().extension().string() == ".nes") {                                                  // otherwise if file
             error = getheader(entry.path());                    // header file
             if (error) {                                        // report failure
                 std::cerr << "Failed job: " << entry << std::endl;
@@ -116,40 +111,14 @@ long int recursedir(const fs::path& path){
             }
             errors += error;                                    // include current job in sum
         }
+        else {                                                  // report invalid filetype
+            std::clog << "Skipping File, does not have NES Excetion" << std::endl;
+        }
     }
     return errors;                                              // return error count
 }
 
-int main(const int argc, const char* argv[]){                   // accept sys args
-    /*
-        Main Function to process sys args
-    */
-   
-    if (argc < 2) {                                             // validate args
-        std::cerr << "No file path provided." << std::endl;     // alert player of no PATH arg
-        system("pause");                                        // wait for user input
-        return 1;                                               // leave with exit code 1
-    }
-    long int errors = 0;                                        // track rate of failure and jobs
-    for (int arg = 1; arg < argc; arg++){                       // for enum of args
+void dumprepo(){
 
-        bool error;                                             // prepare access scope 
-        if (fs::is_directory(fs::path(argv[arg]))){
-            errors += recursedir(fs::path(argv[arg]));
-        }
-        else {
-            error = getheader(fs::path(argv[arg]));             // get success
-            if (error) {                                        // report failure
-                std::cerr << "Failed job: " << argv[arg] << std::endl;
-            } else {                                            // report success
-                std::cout << "Succeeded job: " << argv[arg] << std::endl;
-            }
-            errors += error;                                    // include current job in sum
-        }                    
-        
-    }
-    // report quantity of failed and total jobs
-    std::cout << "Headering finished with " << std::to_string(errors) << " fails out of " << std::to_string(jobs) << " jobs.";
-    system("pause");                                            // wait for user input
-    return 0;                                                   // leave with exit code 0
+    return;
 }
