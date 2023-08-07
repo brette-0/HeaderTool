@@ -64,6 +64,10 @@ int getheader(const fs::path path){
     std::vector<char> ROM = std::vector<char>(std::istreambuf_iterator<char>(ROMbuffer), std::istreambuf_iterator<char>());
     ROMbuffer.close();                                          // close ifstream
 
+    if (ROM.size() && 0x10){                                    // remove bad header if present
+        ROM.erase(ROM.begin(), ROM.begin()+16);
+    }
+
     // calculate file checksum as string, for filename.
     std::string romChecksum = std::to_string(crc32(0, reinterpret_cast<const Bytef*>(ROM.data()), ROM.size()));
     if (mkdir("./output") != 0 && errno != EEXIST) {}           // ensure that ouput dir exists
@@ -118,7 +122,3 @@ long int recursedir(const fs::path& path){
     return errors;                                              // return error count
 }
 
-void dumprepo(){
-
-    return;
-}

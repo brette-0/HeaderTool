@@ -3,7 +3,7 @@
 	"tasks": [
 		{
 			"type": "cppbuild",
-			"label": "build x64",
+			"label": "build x64 CLI",
 			"command": "C:\\msys64\\mingw64\\bin\\gcc.exe",
 			"args": [
 				"-m64",   
@@ -12,7 +12,7 @@
 				"-g",
 				"${file}",
 				"-o",
-				"${fileDirname}\\64 bit\\headertool.exe",
+				"${fileDirname}\\binaries\\headertool_x64.exe",
 				"-lcurl",
 				"-lstdc++",  
 				"-lz",  
@@ -28,7 +28,7 @@
 		},
 		{
 			"type": "cppbuild",
-			"label": "build x86",
+			"label": "build x86 CLI",
 			"command": "C:\\msys64\\mingw32\\bin\\gcc.exe",
 			"args": [
 				"-m32",   
@@ -37,7 +37,7 @@
 				"-g",
 				"${file}",
 				"-o",
-				"${fileDirname}\\32 bit\\headertool.exe",
+				"${fileDirname}\\binaries\\headertool_x86.exe",
 				"-lcurl",
 				"-lstdc++",  
 				"-lz",  
