@@ -64,8 +64,8 @@ int getheader(const fs::path path){
     std::vector<char> ROM = std::vector<char>(std::istreambuf_iterator<char>(ROMbuffer), std::istreambuf_iterator<char>());
     ROMbuffer.close();                                          // close ifstream
 
-    if (ROM.size() && 0x10){                                    // remove bad header if present
-        ROM.erase(ROM.begin(), ROM.begin()+16);
+    if (ROM.size() & 0x10){                                    // remove bad header if present
+        ROM.erase(ROM.begin(), ROM.begin()+(ROM.size() & 0x10));
     }
 
     // calculate file checksum as string, for filename.
