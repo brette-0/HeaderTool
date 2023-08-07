@@ -64,8 +64,12 @@ int getheader(const fs::path path){
     std::vector<char> ROM = std::vector<char>(std::istreambuf_iterator<char>(ROMbuffer), std::istreambuf_iterator<char>());
     ROMbuffer.close();                                          // close ifstream
 
-    if (ROM.size() & 0x10){                                    // remove bad header if present
-        ROM.erase(ROM.begin(), ROM.begin()+(ROM.size() & 0x10));
+    if (ROM.size() & 0x1fe7){                                   // read for illegal filesize
+        std::cerr << "ROM filesize indicates severe corruption!" << std::endl; 
+        return 1;
+    }
+    if (ROM.size() & 0x18){                                     // remove bad header if present
+        ROM.erase(ROM.begin(), ROM.begin()+(ROM.size() & 0x18));
     }
 
     // calculate file checksum as string, for filename.

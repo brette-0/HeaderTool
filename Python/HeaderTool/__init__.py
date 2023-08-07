@@ -27,7 +27,11 @@ def recursedir(path : str)-> int:
 def getheader(arg):
     with open(arg, "rb") as f:                  # Arg2 access
         rom = f.read()
-        if len(rom)&16: rom = rom[len(rom)&16:] # remove header if present
+        if len(rom) & 0x1fe7:
+            print("Found severely corrupt")
+            return 1
+        if len(rom) & 0x18:
+            rom = rom[len(rom)&0x18:]           # remove header if present
                 
         checksum = crc32(rom)                   # calculate headerless ROm
 
