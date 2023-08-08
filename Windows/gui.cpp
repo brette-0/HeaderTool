@@ -1,3 +1,26 @@
+/*
+    On Run:
+    if no registry information then assume we are installing. 
+    Else check latest version commit string and compare against REGISTRY stored one.
+    If not the same we are updating. Else we are running.
+        Installing:
+            Create Program Files Folder
+            Download latest version to said folder
+            Schedule installer deletion
+            write commit no of latest version to REGISTRY
+            Add Filetype dialouge
+        Updating:
+            Download latest version
+            schedule installer deletion
+            schedule latest version write 
+            write commit no of latest version to REGISTRY
+        Running:
+            If no args, use GUI
+            if args, use CLI
+            
+        
+        
+*/
 #include "backend.cpp"                                          // include core functionality         
 #include <nlohmann/json.hpp>                                    // include json reading
 
