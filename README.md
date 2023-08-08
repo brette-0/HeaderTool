@@ -1,14 +1,3 @@
 # HeaderTool
 
-This is a Windows CLI and Python runtime tool used to header and rename headerless (or poorly headerd) ROMs in bulk.
-The tools also support drag and drop, which may be preferred for manual use.
-
-The `x86` binary targets Windows 7, however no tests on Windows 7 devices has been successful and no support is garunteed.
-Currently the project requires an internet throughout the retrieval process.
-
-| Operatying System | Version             |
-| ----------------- | --------------------|
-| Windows 10 (64bit)| `headertool_x64.exe`|
-| Other Windows     | `headertool_x86.exe`|
-| 64 bit other OS   | `__init__.py`       |
-| other OS          | None offered yet    |
+Headertool is a Multiplatform ROM headering, error checking and "goodname" renaming tool. Downloadable as a Windows binary for Windows 7 and above, or a Python script for use in a 64bit python environment. This process is entirely legal and works for all sensitive Nintendo ROMs. To get started download either the python script or Windows binary and drag and drop your ROMs/folders onto the programme to begin headering your ROM. 
