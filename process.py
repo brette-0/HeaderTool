@@ -1,7 +1,8 @@
-import os, json
+import json
 
-contents = list()
-for path in os.listdir("./headers"): contents.append(path) 
-with open("headers/index.json", "w") as f:
+with open("headers/index.json", "r") as f:
+    contents = json.load(f)
+
+del contents[-1] 
+with open("test.json", "w") as f:
     json.dump(contents, f)
-    print(*[f"{c}\n" for c in contents])

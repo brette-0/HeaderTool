@@ -51,6 +51,15 @@
 			],
 			"group": "build",
 			"detail": "compiler: C:\\msys64\\mingw32\\bin\\gcc.exe"
-		}
+		},
+		{
+            "label": "Build x86 | x64 CLI",
+            "dependsOrder": "sequence",
+            "dependsOn": ["build x86 CLI", "build x64 CLI"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
 	]
 }
