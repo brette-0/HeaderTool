@@ -3,3 +3,5 @@
 /Python/dist
 /Python/headertool.egg-info
 *__pycache__
+*.json
+.vscode/tasks.json
