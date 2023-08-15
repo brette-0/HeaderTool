@@ -5,3 +5,5 @@
 *__pycache__
 *.json
 .vscode/tasks.json
+*.pypirc
+/Python/pyproject.toml
