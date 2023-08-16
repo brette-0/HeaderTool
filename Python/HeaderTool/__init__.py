@@ -4,7 +4,6 @@ from urllib.request import urlopen
 from urllib.error import HTTPError
 from os.path import exists, isdir
 from os import mkdir, system, listdir
-import argparse
 
 if __name__ != "__main__": raise Exception("Not Supported!")
 
