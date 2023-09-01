@@ -20,18 +20,13 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::vector<char
     data->insert(data->begin(), byteContents, byteContents + totalSize);
     return totalSize;                                           // why return this
 }
-std::vector<char> getHDR(std::string const url){
+std::vector<char> getHDR(std::string const checksum){
     /*
         Method to retrieve file from repo
     */
     std::vector<char> header;                                   // create header object
     CURL* headercurl = curl_easy_init();                        // curl initialization
-    if (!headercurl) {                                          // if curl failed to initialize
-        // report fatal error within programme
-        std::cerr << "Failed to initialize libcurl." << std::endl;
-        return {};                                              // return empty vector for error
-    }
-    curl_easy_setopt(headercurl, CURLOPT_URL, url.c_str());      
+    curl_easy_setopt(headercurl, CURLOPT_URL, ("https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/" + checksum).c_str());
     curl_easy_setopt(headercurl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(headercurl, CURLOPT_WRITEDATA, &header);
 
@@ -48,7 +43,21 @@ std::vector<char> getHDR(std::string const url){
     return header;                                              // return header contents
 }
 
-int getheader(const fs::path path){
+std::vector<char> localheader(std::string checksum) {
+    std::ifstream headerbuffer("./headers/" + checksum, std::ios::binary);
+    if (!headerbuffer.is_open()) {                          // check if file open failed
+        std::cerr << "Failed to open header";               // report file access error
+        return {};                                          // leave with empty header
+    }
+
+    // read ROM file contents from PATH into ROM vector
+    std::vector<char> header = std::vector<char>(std::istreambuf_iterator<char>(headerbuffer), std::istreambuf_iterator<char>());
+    headerbuffer.close();
+    return header
+}
+
+int getheader(const fs::path path, bool prefer_network == true, bool failsafe == true, headerflag == true, 
+    bool rename == true){
     /*
         Focal function called on per-arg from main
     */
@@ -68,6 +77,7 @@ int getheader(const fs::path path){
         std::cerr << "ROM filesize indicates severe corruption!" << std::endl; 
         return 1;
     }
+
     if (ROM.size() & 0x18){                                     // remove bad header if present
         ROM.erase(ROM.begin(), ROM.begin()+(ROM.size() & 0x18));
     }
@@ -75,24 +85,52 @@ int getheader(const fs::path path){
     // calculate file checksum as string, for filename.
     std::string romChecksum = std::to_string(crc32(0, reinterpret_cast<const Bytef*>(ROM.data()), ROM.size()));
     if (mkdir("./output") != 0 && errno != EEXIST) {}           // ensure that ouput dir exists
-    std::vector<char> header = getHDR("https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/" + romChecksum);
-    if (!header.size()){                                        // if we got emtpy results
-        return 1;                                               // leave with exit code 1
+    if (prefer_network) {
+        std::vector<char> header = getHDR(romChecksum);
+        if (!header.size()) {                                   // if we got emtpy results
+            if (failsafe) {
+                std::cout << "Could not find server stored header info, searching local FS" << std::endl;
+                if (fs::exists("./headers/" + romChecksum) {
+                    header = localheader(romChecksum);          // get header from local FS
+                    if (!header.size()) {                       // if failed to find header info
+                        return 1;                               // leave with exti code 1
+                    }
+                } else {
+                    return 1;                                   // leave with exit code 1
+                }
+
+            }
+            else {
+                return 1;                                       // leave with exit code 1
+            }
+        }
+    } else {
+        header = localheader(romChecksum);                      // get header from local FS
+        if (!header.size()) {                                   // if failed to find header info
+            return 1;                                           // leave with exti code 1
+        }
+    } 
+    if (rename) {
+        // use correted file name from header file
+        std::string newfilename(header.begin() + 16, header.end());
+    } else {
+        std::string newfilename = path.filename().string();
     }
-    std::string goodname(header.begin()+16,header.end());       // convert char vector to str
-    std::ofstream outbuffer("./output/" + goodname, std::ios::binary); 
+    std::ofstream outbuffer("./output/" + newfilename, std::ios::binary); 
 
     
     if (!outbuffer.is_open()){                                  // handle unknown error
         std::cerr << "Failed to create File" << std::endl;      // report fatal error
         return 1;
     }
-    if (header[0]) {                                            // if header begins with non-zero
-        outbuffer.write(header.data(), 16);                     // write header if applicable
-    }
-    else {
-        // if header is zero, implied empty header means log no-header and apply goodname
-        std::clog << "No header for this ROM, goodname will be applied";
+    if (headerflag) {
+        if (header[0]) {                                            // if header begins with non-zero
+            outbuffer.write(header.data(), 16);                     // write header if applicable
+        }
+        else {
+            // if header is zero, implied empty header means log no-header and apply goodname
+            std::clog << "No header for this ROM, goodname will be applied";
+        }
     }
     outbuffer.write(ROM.data(), ROM.size());                    // followed by ROM
     outbuffer.close();                                          // operations are finished
