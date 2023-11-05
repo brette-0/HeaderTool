@@ -49,6 +49,7 @@ ID: Name                    Description
 
 // globals
 bool verbose = false, renamerom = true, headerrom = true, clean = false, preferlocal = false, specified = false, nonet = false, fellback = false;
+bool noskip = false; bool defaulttoNES = true; // if false, default to FDS
 unsigned short int jobs = 0, success = 0, missing = 0, retrieved = 0;
 
 /*
@@ -142,6 +143,7 @@ int main(int argc, char* argr[]){
         else if (argv[argx] == "-v" || argv[argx] == "--verbose") verbose = true;
         else if (argv[argx] == "-l" || argv[argx] == "--local") preferlocal = true;
         else if (argv[argx] == "-o" || argv[argx] == "--output") specified = true;
+        else if (argv[argx] == "-ns" || argv[argx] == "--noskip") noskip = true;
         else if (argv[argx] == "-c" || argv[argx] == "--clean"){
             if (!headerrom){
                 cerr << "Error 4 : Cannot clean header if retaining current header information" << endl;
@@ -253,7 +255,7 @@ void romheader(fs::path source, fs::path target){
         for (fs::path subdir : fs::directory_iterator(source)){
             romheader(subdir, target/(source.filename()));
         }
-    } else if (source.extension() == ".nes"){                       // only header NES extension
+    } else if (source.extension() == ".nes" || noskip){             // only header NES extension (unless not)
         ++jobs;                                                     // record NES file as attempted
         ifstream inROMbuffer(source, ios::binary);
         if (!inROMbuffer) {
