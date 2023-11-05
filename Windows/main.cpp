@@ -20,9 +20,9 @@ using namespace nlohmann;
 namespace fs = filesystem;
 
 // global constants
-const string indexurl = "https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/index.json";
-const string headerurlprefix = "https://raw.githubusercontent.com/BrettefromNesUniverse/HeaderTool/main/headers/";
-const string github = "https://github.com/BrettefromNesUniverse/HeaderTool";
+const string indexurl = "https://raw.githubusercontent.com/brette-0/HeaderTool/main/index.json";
+const string headerurlprefix = "https://raw.githubusercontent.com/brette-0/HeaderTool/main/headers/";
+const string github = "https://github.com/brette-0/HeaderTool";
 const string discord = "https://discord.gg/EwfEWcVtzp";
 
 /* exit codes
@@ -83,11 +83,13 @@ size_t HeaderWriteCallback(void* contents, size_t size, size_t nmemb, vector<cha
 
 
 int main(int argc, char* argr[]){
+    // confirm that at least one arguement is provided
     if (argc < 2){
         cerr << "Error 1 : No Operations Provided" << endl;
         return -1;  // no operation error
     }
 
+    // dump args into header (quite possibly redundant)
     vector<string> argv = {"HeaderTool"};
 
     for(int i = 1; i < argc; ++i) {
@@ -95,18 +97,21 @@ int main(int argc, char* argr[]){
     }
 
     if ((argv[1] == "-h" || argv[1] == "--help") && argc == 2){
+        // generic help message (not really sure what I should put here)
         cout << "HeaderTool 1.5 (x64) [Windows]" << endl
              << "MIT LICENCSE      :" << fs::absolute("LICENSE") << endl
              << "GITHUB REPOSITORY : "<< github << endl
              << "DISCORD SERVER    : "<< discord << endl;
         return 0;
     } else if ((argv[1] == "-g" || argv[1] == "--get") && argc <= 3){
+        // database pull command, simple as
         getdb();
         if (nonet){
             cerr << "Error 2 : repo is unreachable, check network configuration or visit repo: " << github << endl;
             return -2;
         }
     
+        // elect parent directory for header directory
         fs::path parentdir;
         if (argc == 3){
             parentdir = fs::path(argv[2]);
@@ -122,8 +127,10 @@ int main(int argc, char* argr[]){
         return -9; // impossible to operate
     }
     int argx = 1;                                       // define here for later use
-    for (; argx < argc; ++argx){
-        if (argv[argx][0] != '-') break;
+    for (; argx < argc; ++argx){                        // for all potential key word arguements
+        if (argv[argx][0] != '-') break;                // leave if not a key word arguement
+
+        // innapropriate use of these keywords
         if (argv[argx] == "-h" || argv[argx] == "--help"){
             cerr << "Error 3 : Broken use of help arguement" << endl;
             return -3;  // broken use of positional arguement
@@ -132,7 +139,7 @@ int main(int argc, char* argr[]){
             return -3;
         }
 
-        else if (argv[argx] == "-v" || argv[argx] == "--verbose") verbose = true;// we actually have something to look at
+        else if (argv[argx] == "-v" || argv[argx] == "--verbose") verbose = true;
         else if (argv[argx] == "-l" || argv[argx] == "--local") preferlocal = true;
         else if (argv[argx] == "-o" || argv[argx] == "--output") specified = true;
         else if (argv[argx] == "-c" || argv[argx] == "--clean"){
@@ -177,18 +184,17 @@ int main(int argc, char* argr[]){
     }
 
     fs::path outdir;
-    
-    if (specified){
+    if (specified){                 // if the `-o | --output` key word was used
         outdir = argv[argx];
         ++argx;
-    } else outdir = "./output/";
+    } else outdir = "./output/";    // or not, use default output naming scheme
 
-    if (argc == argx){
+    if (argc == argx){              // not all arguements should be key word arguements
         cerr << "Error 6 : No input directory specified" << endl;
         return -6;
     }
 
-    for (; argx < argc; ++argx){
+    for (; argx < argc; ++argx){    // the remaining should be valid paths
         if (fs::exists(argv[argx])) romheader(argv[argx], outdir);
         else cerr << "No file or folder exists : " << argv[argx] << endl;
     }
@@ -239,29 +245,26 @@ int main(int argc, char* argr[]){
 }
 
 void romheader(fs::path source, fs::path target){
-    cout << source << endl << target << endl;
-    if (!fs::exists(target)) fs::create_directory(target);
-    if (fs::is_directory(source)){
+    /*
+        recursive function to interpret NES file or folder
+    */
+    if (!fs::exists(target)) fs::create_directory(target);          // create target parent if needed
+    if (fs::is_directory(source)){                                  // recurse directory if needed
         for (fs::path subdir : fs::directory_iterator(source)){
             romheader(subdir, target/(source.filename()));
         }
-    } else if (source.extension() == ".nes"){
-        ++jobs;
+    } else if (source.extension() == ".nes"){                       // only header NES extension
+        ++jobs;                                                     // record NES file as attempted
         ifstream inROMbuffer(source, ios::binary);
-        vector<char> rom;
         if (!inROMbuffer) {
             cerr << "Error opening file." << endl;
         }
-        inROMbuffer.seekg(0, ios::end);
-        streampos fileSize = inROMbuffer.tellg();
-        rom.resize(fileSize);
-        inROMbuffer.seekg(0, ios::beg);
-        inROMbuffer.read(rom.data(), fileSize);
+        vector<char> rom = std::vector<char>(std::istreambuf_iterator<char>(inROMbuffer), std::istreambuf_iterator<char>());
         inROMbuffer.close();
-        vector<char> header;
 
-        if (headerrom || clean){ 
-            rom.erase(rom.begin(), rom.begin() + (rom.size() & 0x1f));
+        vector<char> header;                                        // preserve scope
+        if (headerrom || clean){                                    // manipulate header if tasked to
+            rom.erase(rom.begin(), rom.begin() + (rom.size() & 0x18));
             if (!clean){
                 header = getheader(crc32(0, (const Bytef *)rom.data(), rom.size()), source);
                 if (header.size() == 1) return; // rewrite maybe?
@@ -271,6 +274,8 @@ void romheader(fs::path source, fs::path target){
                 cout << "Removed header from " << source;
             }
         }
+
+        // rename ROM if tasked to with header information from database
         fs::path goodname = source;
         if (renamerom){
             goodname = fs::path(string(header.begin()+16, header.end()));
@@ -283,7 +288,7 @@ void romheader(fs::path source, fs::path target){
             return;
         }
         outROMbuffer.write(rom.data(), rom.size());
-        ++success;
+        ++success;                              // register success if no failure
         return;
     } else if (verbose){
         clog << "Skipping: " << source << " Not a NES file" << endl;
@@ -291,9 +296,14 @@ void romheader(fs::path source, fs::path target){
 }
 
 void getdb(bool download, fs::path parentdir){
+    /*
+    
+        downloads database to memory, or begins download headers, depends how it was called.
+    
+    */
     CURL* curl = curl_easy_init();
     if (!curl) {
-        nonet = true;
+        nonet = true;                   // disable network operations
         return;
     }
 
@@ -310,7 +320,7 @@ void getdb(bool download, fs::path parentdir){
     curl_easy_cleanup(curl);
     if (!download && res == CURLE_OK) return;
     if (res != CURLE_OK){
-        nonet = true;
+        nonet = true;                                       // disable network operations
         return;
     }
 
@@ -379,15 +389,10 @@ vector<char> fromlocalFS(unsigned int checksum){
     }
 
     ifstream headerbuffer(fs::path("headers/" + to_string(checksum)), ios::binary);
-    vector<char> header;
     if (!headerbuffer) {
         return {-2};
     }
-    headerbuffer.seekg(0, ios::end);
-    streampos fileSize = headerbuffer.tellg();
-    header.resize(fileSize);
-    headerbuffer.seekg(0, ios::beg);
-    headerbuffer.read(header.data(), fileSize);
+    vector<char> header = std::vector<char>(std::istreambuf_iterator<char>(headerbuffer), std::istreambuf_iterator<char>());
     headerbuffer.close();
 
     return header;
