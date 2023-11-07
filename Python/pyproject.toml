@@ -7,13 +7,13 @@ headertool = "headertool.main:main"
 
 [project]
 name = "headertool"
-version = "1.0.9"
+version = "pre_1.5"
 authors = [
   { name="Brette", email="brette.allen05@gmail.com" },
 ]
 description = "Headers and renames your ROMs"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.5"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",

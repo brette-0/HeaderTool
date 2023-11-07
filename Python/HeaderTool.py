@@ -1,5 +1,5 @@
 from zlib import crc32 
-from sys import exit, argv
+from sys import argv
 from pathlib import PurePosixPath
 from os.path import exists, isdir
 from os import listdir, mkdir
@@ -10,9 +10,12 @@ preferlocal = noskip = defaultoNES = specified = clean = verbose = False
 rename = headerrom = defaulttoNES = True
 
 class HeaderTool:
+    @staticmethod
     def main(*argv):
+        global preferlocal, noskip, defaultoNES, specified, clean, verbose, rename, headerrom, defaulttoNES
+        
         if argv[1] in {"-h", "--help"}:
-            print("")#help message 
+            print("")  # help message
             return
         
         elif argv[1] in {"-g", "--get"}:
@@ -22,30 +25,26 @@ class HeaderTool:
         argo = 1
         for arg in argv:
 
-            if not argv[0].startswith("-"): break 
+            if not arg.startswith("-"): break 
             argo += 1
 
-            if argv in {"-v", "--verbose"}:
-                global verbose
+            if arg in {"-v", "--verbose"}:
                 verbose = True
                 continue
 
-            elif argv in {"-l", "--local"}:
-                global preferlocal 
+            elif arg in {"-l", "--local"}:
                 preferlocal = True 
                 continue
 
-            elif argv in {"-o", "--output"}:
-                global specified
+            elif arg in {"-o", "--output"}:
                 specified = True
                 continue
 
-            elif argv in {"-ns", "--noskip"}:
-                global noskip 
+            elif arg in {"-ns", "--noskip"}:
                 noskip = True 
                 continue
 
-            elif argv in {"-c", "--clean"}:
+            elif arg in {"-c", "--clean"}:
                 if not headerrom:
                     print("Cannot clean header if preserving")
                     return
@@ -54,11 +53,10 @@ class HeaderTool:
                     print("No operation")
                     return 
                 
-                global clean 
                 clean = True 
                 continue 
 
-            elif argv in {"-nh", "--noheader"}:
+            elif arg in {"-nh", "--noheader"}:
                 if clean:
                     print("Cannot clean header if preserving")
                     return 
@@ -67,16 +65,14 @@ class HeaderTool:
                     print("No operation")
                     return
 
-                global headerrom 
                 headerrom = False 
                 continue
 
-            elif argv in {"-nr", "--norename"}:
+            elif arg in {"-nr", "--norename"}:
                 if not headerrom:
                     print("No Operation")
                     return 
                 
-                global rename 
                 rename = False
                 continue
             
@@ -92,11 +88,13 @@ class HeaderTool:
         for arg in argv[argo + specified:]:
             HeaderTool.romheader(PurePosixPath(arg), PurePosixPath(output))
             
-    def romheader(arg : PurePosixPath, output : PurePosixPath): 
-        global noskip, header, clean, rename, verbose, defaulttoNES
+    @staticmethod
+    def romheader(arg, output): 
+        global noskip, headerrom, clean, rename, defaulttoNES
+        if not exists(output): mkdir(output)
         if isdir(arg):
             for path in listdir(arg):
-                HeaderTool.romheader(f"{arg}/{path}", f"{output}/{arg.name}")
+                HeaderTool.romheader(PurePosixPath(f"{arg}/{path}"), PurePosixPath(f"{output}/{arg.name}"))
         elif arg.name.endswith(".nes") or (noskip and defaulttoNES):
             with open(arg, "rb") as f:
                 rom = f.read()
@@ -106,15 +104,16 @@ class HeaderTool:
                 if not clean:
                     header = HeaderTool.getheader(crc32(rom))
                     rom = header[:16]+rom 
-                    print("Headerd ROM")
+                    print("Headered ROM")
             
             goodname = str(header[16:]) if rename else arg.name
-            with open(f"{output}/{arg.name}", "wb") as f:
+            with open(PurePosixPath(f"{output}/{goodname}"), "wb") as f:
                 f.write(rom)
 
-    def getdb(self): 
+    @staticmethod
+    def getdb(): 
         try:
-            index = urllib.request.urlopen("path/to/json").response.read()
+            index = urllib.request.urlopen("path/to/json").read()
             index = json.loads(index)
 
             for checksum in index:
@@ -128,8 +127,9 @@ class HeaderTool:
         except Exception as e:
             print(f"Error downloading file: {e}")
 
-    def getheader(checksum : int | str):
-        global nonet
+    @staticmethod
+    def getheader(checksum):
+        global nonet, header, rename, clean
         if preferlocal or nonet:
             header = HeaderTool.fromlocalFS(checksum)
             if not header:
@@ -157,14 +157,16 @@ class HeaderTool:
                     return
             else: return header
 
-    def downloadheader(checksum : int | str) -> None:
+    @staticmethod
+    def downloadheader(checksum) -> None:
         try:
-            return urllib.request.urlopen(f"path/{checksum}").response.read()
+            return urllib.request.urlopen(f"path/{checksum}").read()
         except Exception as e:
             print(f"Error downloading file: {e}")
-        return None
+            return None
     
-    def fromlocalFS(checksum : int | str()):
+    @staticmethod
+    def fromlocalFS(checksum):
         if not exists("./headers"): 
             print("Could not find local database")
             return 
@@ -177,4 +179,5 @@ class HeaderTool:
             return f.read()
         
 
-if __name__ == "__main__": HeaderTool.main(*argv)
+if __name__ == "__main__": 
+    HeaderTool.main(*argv)

@@ -1,0 +1,8 @@
+Package: HeaderTool-1.5-Lite-x86
+Version: 1.5
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: Your Name <brette.allen05@gmail.com>
+Description: Headers NES ROMs
+Homepage: https://discord.gg/EwfEWcVtzp
