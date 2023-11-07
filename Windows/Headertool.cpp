@@ -104,6 +104,7 @@ int main(int argc, char* argr[]){
              << "GITHUB REPOSITORY : "<< github << endl
              << "DISCORD SERVER    : "<< discord << endl;
         return 0;
+        
     } else if ((argv[1] == "-g" || argv[1] == "--get") && argc <= 3){
         // database pull command, simple as
         getdb();
@@ -386,7 +387,6 @@ vector<char> downloadheader(unsigned int checksum){
 vector<char> fromlocalFS(unsigned int checksum){
     if (!fs::exists("headers/")){
         cerr << "Local database is inaccessible!" << endl;
-        nonet = true;
         return {-1};
     }
 
