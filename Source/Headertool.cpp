@@ -60,8 +60,14 @@ ID: Name                    Description
 // globals
 bool verbose = false, renamerom = true, headerrom = true, clean = false, preferlocal = false, specified = false, nonet = false, fellback = false;
 bool noskip = false; bool defaulttoNES = true; // if false, default to FDS
-unsigned short int jobs = 0, success = 0, missing = 0, retrieved = 0;
+unsigned short int missing = 0, retrieved = 0;
 
+atomic<unsigned short int> success = 0;
+
+struct job{fs::path source, target;};
+
+
+vector<job> jobs;
 /*
 
 verbose     : flag for verbose mode
@@ -73,11 +79,11 @@ specified   : flag to indicate specified output parent folder
 nonet       : flag to indicate network failure
 fellback    : flag to indiciate a successful fallback precaution
 
-jobs        : the amount of tasks found
 success     : the amount of tasks successfully completed
 missing     : the amount of files found on network unfound on local database
 retrieved   : the amount of missing files successfully downloaded
 
+jobs        : the files to process
 */
 
 //defines
@@ -92,7 +98,8 @@ auto clearScreen = []() {
 };
 
 //functions
-void romheader(fs::path source, fs::path target);
+void completejob(job thisjob);
+void getjob(fs::path source, fs::path target);
 void getdb(bool download = false, fs::path parentdir = fs::current_path());
 
 vector<char> getheader(unsigned int checksum, fs::path source);
@@ -107,7 +114,7 @@ size_t HeaderWriteCallback(void* contents, size_t size, size_t nmemb, vector<cha
 int main(int argc, char* argr[]){
     // confirm that at least one arguement is provided
     if (argc < 2){
-        cerr << "Error 1 : No Operations Provided" << endl;
+        cerr << "Error 1 : No Operations Provided\n";
         return -1;  // no operation error
     }
 
@@ -120,17 +127,17 @@ int main(int argc, char* argr[]){
 
     if ((argv[1] == "-h" || argv[1] == "--help") && argc == 2){
         // generic help message (not really sure what I should put here)
-        cout << "HeaderTool 1.5 (x(x" << (sizeof(void*) == 8) << ") [Windows]" << endl
-             << "MIT LICENCSE      :" << fs::absolute("LICENSE") << endl
-             << "GITHUB REPOSITORY : "<< github << endl
-             << "DISCORD SERVER    : "<< discord << endl;
+        cout << "HeaderTool 1.5 (x(x" << (sizeof(void*) == 8) << ") [Windows]\n"
+             << "MIT LICENCSE      :" << fs::absolute("LICENSE") << '\n'
+             << "GITHUB REPOSITORY : "<< github << '\n'
+             << "DISCORD SERVER    : "<< discord << '\n';
         return 0;
         
     } else if ((argv[1] == "-g" || argv[1] == "--get") && argc <= 3){
         // database pull command, simple as
         getdb();
         if (nonet){
-            cerr << "Error 2 : repo is unreachable, check network configuration or visit repo: " << github << endl;
+            cerr << "Error 2 : repo is unreachable, check network configuration or visit repo: " << github << '\n';
             return -2;
         }
     
@@ -155,10 +162,10 @@ int main(int argc, char* argr[]){
 
         // innapropriate use of these keywords
         if (argv[argx] == "-h" || argv[argx] == "--help"){
-            cerr << "Error 3 : Broken use of help arguement" << endl;
+            cerr << "Error 3 : Broken use of help arguement\n";
             return -3;  // broken use of positional arguement
         } else if (argv[argx] == "-g" || argv[argx] == "--get"){
-            cerr << "Error 3 : Broken use of get arguement" << endl;
+            cerr << "Error 3 : Broken use of get arguement\n";
             return -3;
         }
 
@@ -168,42 +175,42 @@ int main(int argc, char* argr[]){
         else if (argv[argx] == "-ns" || argv[argx] == "--noskip") noskip = true;
         else if (argv[argx] == "-c" || argv[argx] == "--clean"){
             if (!headerrom){
-                cerr << "Error 4 : Cannot clean header if retaining current header information" << endl;
+                cerr << "Error 4 : Cannot clean header if retaining current header information\n";
                 return -4; // contradicting options
             }
             clean = true;
         }
         else if (argv[argx] == "-nh" || argv[argx] == "--noheader"){
             if (clean){
-                cerr << "Error 4 : Cannot clean header if retaining current header information" << endl;
+                cerr << "Error 4 : Cannot clean header if retaining current header information\n";
                 return -4; // contradicting operations
             } else if (!renamerom){
-                cerr << "Error 5 : Cannot retain current header without renaming" << endl;
+                cerr << "Error 5 : Cannot retain current header without renaming\n";
                 return -5; // arguements cancel all operation
             }
             headerrom = false;
         }
         else if (argv[argx] == "-nr" || argv[argx] == "--norename"){
             if (!headerrom){
-                cerr << "Error 5 : Cannot retain current header without renaming" << endl;
+                cerr << "Error 5 : Cannot retain current header without renaming\n";
                 return -5; // arguements cancel all operation
             }
             renamerom = false;
         } else if (argv[argx].size() > 1){
             if (argv[argx][0] == ' '){
-                cerr << "Error 7 : Malformed optional arguement" << endl;
+                cerr << "Error 7 : Malformed optional arguement\n";
                 return -7;
             } else {
-                cerr << "Error 8 : Unrecognized optional argument" << endl;
+                cerr << "Error 8 : Unrecognized optional argument\n";
                 return -8;
             }
         } else {
-            cerr << "Error 7 : Malformed optional arguement" << endl;
+            cerr << "Error 7 : Malformed optional arguement\n";
             return -7;
         }
     }
     if (argc == argx){
-        cerr << "Error 6 : No input directory specified" << endl;
+        cerr << "Error 6 : No input directory specified\n";
         return -6; // no entrance point
     }
 
@@ -214,74 +221,29 @@ int main(int argc, char* argr[]){
     } else outdir = "./output/";    // or not, use default output naming scheme
 
     if (argc == argx){              // not all arguements should be key word arguements
-        cerr << "Error 6 : No input directory specified" << endl;
+        cerr << "Error 6 : No input directory specified\n";
         return -6;
     }
 
+    cout << "Recursing input paths...\n";
     for (; argx < argc; ++argx){    // the remaining should be valid paths
-        if (fs::exists(argv[argx])) romheader(argv[argx], outdir);
-        else cerr << "No file or folder exists : " << argv[argx] << endl;
+        if (fs::exists(argv[argx])) getjob(argv[argx], outdir);
+        else cerr << "No file or folder exists : " << argv[argx] << '\n';
     }
 
-    // we may need to clean up the output folder for empty folders
 
-    cout << "HeadertTool finished " << jobs << " tasks with " << success << " passing files" << endl;
-    if (success){
+    atomic<float> progress = distance(fs::directory_iterator(outdir), fs::directory_iterator{});
+    mutex mtx;
 
-        if (!fellback){
-            if (jobs == success){
-                cout << "Total Success : No requirement for secondary use database" << endl;
-                return 0;
-                // report total success
-            } else {
-                cout << "Partial Success : Unable to use secondary use database" << endl;
-                return 1;
-                // report partial success
-            }
-        }
+    auto completejob = [&](job thisjob){
+        string percentage = to_string((static_cast<unsigned char>((progress.load() / jobs.size()) * 100)));
+        string success_str;
+        progress.store(progress.load() + 1.0);
+        
 
-        switch ((preferlocal << 1) | (success == jobs)){
-            case 0:         // prefer online, partial success
-                cout << "Partial success : Relied on network databse" << endl;
-                cout << "Found " << missing << " files and succesfully updated database with " << retrieved << " of them." << endl;
-                return 3;
-            
-            case 1:         // prefer online, total success
-                cout << "Full success : Relied on network databse" << endl;
-                cout << "Found " << missing << " files and succesfully updated database with " << retrieved << " of them." << endl;
-                return 2;
-            
-            case 2:         // prefer offline, partial success
-                cout << "Partial success : Relied on local databse" << endl;
-                return 5;
-
-            case 3:         // prefer offline, total success
-                cout << "Total success : Relied on local databse" << endl;
-                return 4;
-        }
-    } else if (!jobs){
-        clog << "No Operations : Nothing could be found" << endl;
-        return 7;
-    } else {
-        clog << "Total Failure : No operations were successful" << endl;
-        return 6;
-    }
-}
-
-void romheader(fs::path source, fs::path target){
-    /*
-        recursive function to interpret NES file or folder
-    */
-    if (!fs::exists(target)) fs::create_directory(target);          // create target parent if needed
-    if (fs::is_directory(source)){                                  // recurse directory if needed
-        for (fs::path subdir : fs::directory_iterator(source)){
-            romheader(subdir, target/(source.filename()));
-        }
-    } else if (source.extension() == ".nes" || noskip){             // only header NES extension (unless not)
-        ++jobs;                                                     // record NES file as attempted
-        ifstream inROMbuffer(source, ios::binary);
+        ifstream inROMbuffer(thisjob.source, ios::binary);
         if (!inROMbuffer) {
-            cerr << "Error opening file." << endl;
+            cerr << "Error opening file.\n";
         }
         vector<char> rom = std::vector<char>(std::istreambuf_iterator<char>(inROMbuffer), std::istreambuf_iterator<char>());
         inROMbuffer.close();
@@ -290,34 +252,99 @@ void romheader(fs::path source, fs::path target){
         if (headerrom || clean){                                    // manipulate header if tasked to
             rom.erase(rom.begin(), rom.begin() + (rom.size() & 0x18));
             if (!clean){
-                header = getheader(crc32(0, (const Bytef *)rom.data(), rom.size()), source);
+                header = getheader(crc32(0, (const Bytef *)rom.data(), rom.size()), thisjob.source);
                 if (header.size() == 1) return; // rewrite maybe?
                 rom.insert(rom.begin(), header.begin(), header.begin() + 16);
-                cout << "Headered " << source;
+                success_str =  percentage + "% Headered:            " + thisjob.source.string();
             } else {
-                cout << "Removed header from " << source;
+                success_str =  percentage + "% UnHeadered:            " + thisjob.source.string();
             }
         }
 
         // rename ROM if tasked to with header information from database
-        fs::path goodname = source;
+        fs::path goodname = thisjob.source;
         if (renamerom){
             goodname = fs::path(string(header.begin()+16, header.end()));
-            cout << " and renamed to " << string(header.begin()+16, header.end()) << endl;
-        } else cout << endl;
+            success_str +=  " and renamed to " + string(header.begin()+16, header.end()) + '\n';
+        } else success_str += '\n';
 
-        ofstream outROMbuffer(target/goodname, ios::binary);
+        ofstream outROMbuffer(thisjob.target/goodname, ios::binary);
         if (!outROMbuffer){
-            cerr << "Unknown error : Could not write to " << target/goodname << endl;
+            cout << percentage << "% Failed :            " << thisjob.source << '\n';
             return;
-        }
+        } else cout << success_str;
         outROMbuffer.write(rom.data(), rom.size());
-        ++success;                              // register success if no failure
+        success.store(success.load() + 1.0);                              // register success if no failure
+        std::lock_guard<std::mutex> lock(mtx);
         return;
-    } else if (verbose){
-        clog << "Skipping: " << source << " Not a NES file" << endl;
+    };
+
+    vector<std::thread> jobthreads;
+    for (const job& thisjob : jobs) jobthreads.emplace_back([&]() { completejob(thisjob); });
+    for (std::thread& thread : jobthreads) thread.join();
+
+    clearScreen();
+    cout << "100% Jobs complete\n";
+
+    cout << "HeadertTool finished " << jobs.size() << " tasks with " << success << " passing files\n";
+    if (success){
+
+        if (!fellback){
+            if (jobs.size() == success){
+                cout << "Total Success : No requirement for secondary use database\n";
+                return 0;
+                // report total success
+            } else {
+                cout << "Partial Success : Unable to use secondary use database\n";
+                return 1;
+                // report partial success
+            }
+        }
+
+        switch ((preferlocal << 1) | (success == jobs.size())){
+            case 0:         // prefer online, partial success
+                cout << "Partial success : Relied on network databse\n";
+                cout << "Found " << missing << " files and succesfully updated database with " << retrieved << " of them.\n";
+                return 3;
+            
+            case 1:         // prefer online, total success
+                cout << "Full success : Relied on network databse\n";
+                cout << "Found " << missing << " files and succesfully updated database with " << retrieved << " of them.\n";
+                return 2;
+            
+            case 2:         // prefer offline, partial success
+                cout << "Partial success : Relied on local databse\n";
+                return 5;
+
+            case 3:         // prefer offline, total success
+                cout << "Total success : Relied on local databse\n";
+                return 4;
+        }
+    } else if (!jobs.size()){
+        clog << "No Operations : Nothing could be found\n";
+        return 7;
+    } else {
+        clog << "Total Failure : No operations were successful\n";
+        return 6;
     }
 }
+
+void getjob(fs::path source, fs::path target){
+    /*
+        recursive function to interpret NES file or folder
+    */
+    if (!fs::exists(target)) fs::create_directory(target);          // create target parent if needed
+    if (fs::is_directory(source)){                                  // recurse directory if needed
+        for (fs::path subdir : fs::directory_iterator(source)){
+            getjob(subdir, target/(source.filename()));
+        }
+    } else if (source.extension() == ".nes" || noskip){             // only header NES extension (unless not)
+        jobs.push_back({source, target});
+    } else if (verbose){
+        clog << "Skipping: " << source << " Not a NES file\n";
+    }
+}
+
 
 void getdb(bool download, fs::path parentdir){
     /*
@@ -360,16 +387,16 @@ void getdb(bool download, fs::path parentdir){
         string percentage = to_string((static_cast<unsigned char>((progress.load() / checksums.size()) * 100)));
         if (header.size() == 1){
             if (header[0] == -1){
-                cerr << percentage << "% Unknown Network Error: " << checksum << endl;
+                cerr << percentage << "% Unknown Network Error: " << checksum << '\n';
             } else if (header[0] == -2){
-                cerr << percentage << "% Missing header:        " << checksum << endl;
+                cerr << percentage << "% Missing header:        " << checksum << '\n';
             }
         } else {
             progress.store(progress.load() + 1.0);
             std::lock_guard<std::mutex> lock(mtx);
             ofstream headerbuffer(targetdir/to_string(checksum), ios::binary);
             headerbuffer.write(header.data(), header.size());
-            cout << percentage << "% Downloaded:            " << string(header.begin()+16, header.end()) << endl;
+            cout << percentage << "% Downloaded:            " << string(header.begin()+16, header.end()) << '\n';
         }
     };
 
@@ -387,7 +414,7 @@ void getdb(bool download, fs::path parentdir){
     }
 
     clearScreen();
-    cout << "100% Downloaded, use -l or --local to use local database" << endl;
+    cout << "100% Downloaded, use -l or --local to use local database\n";
 }
 
 vector<char> downloadheader(unsigned int checksum){
@@ -422,7 +449,7 @@ vector<char> downloadheader(unsigned int checksum){
 
 vector<char> fromlocalFS(unsigned int checksum){
     if (!fs::exists("headers/")){
-        cerr << "Local database is inaccessible!" << endl;
+        cerr << "Local database is inaccessible!\n";
         return {-1};
     }
 
@@ -446,25 +473,25 @@ vector<char> getheader(unsigned int checksum, fs::path source){
         if (header.size() == 1){
             switch(header[0]){
                 case -1:
-                    cerr << "Local Database is inaccessible" << endl;
+                    cerr << "Local Database is inaccessible\n";
                     return {-1};
 
                 case -2:
-                    cerr << "Could not locate " << source << " in local database" << endl;
+                    cerr << "Could not locate " << source << " in local database\n";
                     if (nonet) return {-1};
                     if (header.size() == 1){
                         switch(header[0]){
                             case -1:
-                                cerr << "Could not establish a connection with database" << endl;
+                                if (verbose) cerr << "Could not establish a connection with database\n";
                                 nonet = true;
                                 return {-1};
 
                             case -2:
-                                cerr << "No header for " << source << " on local database" << endl;
+                                if (verbose) cerr << "No header for " << source << " on local database\n";
                                 return {-1};
 
                             default:
-                                cerr << "Unknown Error" << endl;
+                                if (verbose) cerr << "Unknown Error\n";
                                 return {-3};
                         }
                     } else {
@@ -472,19 +499,19 @@ vector<char> getheader(unsigned int checksum, fs::path source){
                         fellback = true;
                         ofstream updatebuffer("./headers/" + to_string(checksum), ios::binary);         // update local db with header if not present
                         if (!updatebuffer && verbose){
-                            cerr << "Could not update local DB for " << source << endl;
+                            cerr << "Could not update local DB for " << source << '\n';
                             return {header};
                         } else if (updatebuffer){
                             updatebuffer.write(header.data(), header.size());
                             updatebuffer.close();
-                            if (verbose) clog << "Added " << string(header.begin() + 16, header.end()) << " to local datbase" << endl;
+                            if (verbose) clog << "Added " << string(header.begin() + 16, header.end()) << " to local datbase\n";
                             ++retrieved;
                         }
                         return{header};
                     }
                 
                 default:
-                    cerr << "Unknown Error" << endl;
+                    cerr << "Unknown Error\n";
                     return {-3};
             }
         } else return{header};
@@ -493,16 +520,16 @@ vector<char> getheader(unsigned int checksum, fs::path source){
         if (header.size() == 1){
             switch(header[0]){
                 case -1:
-                    cerr << "Could not establish a connection with database" << endl;
+                    if (verbose) cerr << "Could not establish a connection with database\n";
                     nonet = true;
                     break;
 
                 case -2:
-                    cerr << "No header for " << source << " on local database" << endl;
+                    if (verbose) cerr << "No header for " << source << " on local database\n";
                     break;
 
                 default:
-                    cerr << "Unknown Error" << endl;
+                    if (verbose)cerr << "Unknown Error\n";
                     return {-3};
             }
             if (!fs::exists("./headers/")) return {-1};
@@ -510,15 +537,15 @@ vector<char> getheader(unsigned int checksum, fs::path source){
             if (header.size() == 1){
                 switch(header[0]){
                     case -1:
-                        cerr << "Local Database is inacessible" << endl;
+                        if (verbose) cerr << "Local Database is inacessible\n";
                         return {-1};
 
                     case -2:
-                        cerr << "Could not locate " << source << " in local database" << endl;
+                        if (verbose)cerr << "Could not locate " << source << " in local database\n";
                         return {-1};
 
                     default:
-                        cerr << "Unknown Error" << endl;
+                        if (verbose)cerr << "Unknown Error\n";
                         return {-3};
                 }
             } else {

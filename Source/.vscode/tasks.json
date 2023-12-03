@@ -4,19 +4,19 @@
         {
             "type": "cppbuild",
             "label": "Build HeaderTool x64 Windows",
-            "command": "C:\\msys64\\mingw64\\bin\\g++.exe",
+            "command": "C:/msys64/mingw64/bin/g++.exe",
             "args": [
                 "-fdiagnostics-color=always",
-                "c:/users/brette/documents/headertool/headertool.cpp",
+                "C:/Users/Administrator/Documents/GitHub/HeaderTool/Source/headertool.cpp",
                 "-o",
-                "c:/users/brette/documents/headertool/x64/HeaderTool.exe",
+                "C:/Users/Administrator/Documents/GitHub/HeaderTool/Source/x64/HeaderTool.exe",
                 "-IC:/msys64/mingw64/include",
                 "-LC:/msys64/mingw64/lib",
                 "-lz",
                 "-lcurl"
             ],
             "options": {
-                "cwd": "C:\\msys64\\mingw64\\bin"
+                "cwd": "C:/msys64/mingw64/bin"
             },
             "problemMatcher": [
                 "$gcc"
@@ -25,25 +25,25 @@
                 "kind": "build",
                 "isDefault": false
             },
-            "detail": "compiler: C:\\msys64\\mingw64\\bin\\g++.exe"
+            "detail": "compiler: C:/msys64/mingw64/bin/g++.exe"
         },
         {
             "type": "cppbuild",
             "label": "Build HeaderTool x86 Windows",
-            "command": "C:\\msys64\\mingw32\\bin\\g++.exe",
+            "command": "C:/msys64/mingw32/bin/g++.exe",
             "args": [
                 "-m32",
                 "-fdiagnostics-color=always",
-                "c:/users/brette/documents/headertool/headertool.cpp",
+                "C:/Users/Administrator/Documents/GitHub/HeaderTool/Source/headertool.cpp",
                 "-o",
-                "c:/users/brette/documents/headertool/x86/HeaderTool.exe",
+                "C:/Users/Administrator/Documents/GitHub/HeaderTool/Source/x86/HeaderTool.exe",
                 "-IC:/msys64/mingw32/include",
                 "-LC:/msys64/mingw32/lib",
                 "-lcurl",
                 "-lz"
             ],
             "options": {
-                "cwd": "C:\\msys64\\mingw32\\bin"
+                "cwd": "C:/msys64/mingw32/bin"
             },
             "problemMatcher": [
                 "$gcc"
@@ -52,25 +52,25 @@
                 "kind": "build",
                 "isDefault": false
             },
-            "detail": "compiler: C:\\msys64\\mingw32\\bin\\g++.exe"
+            "detail": "compiler: C:/msys64/mingw32/bin/g++.exe"
         },
         {
             "type": "cppbuild",
             "label": "Build HeaderTool Lite x64 Windows",
-            "command": "C:\\msys64\\mingw64\\bin\\g++.exe",
+            "command": "C:/msys64/mingw64/bin/g++.exe",
             "args": [
                 "-static",
                 "-fdiagnostics-color=always",
-                "c:/users/brette/documents/headertool/headertooll.cpp",
+                "C:/Users/Administrator/Documents/GitHub/HeaderTool/Source/headertooll.cpp",
                 "-o",
-                "c:/users/brette/documents/headertool/x64/HeaderToolL.exe",
+                "C:/Users/Administrator/Documents/GitHub/HeaderTool/Source/x64/HeaderToolL.exe",
                 "-IC:/msys64/mingw64/include",
                 "-LC:/msys64/mingw64/lib",
                 "-lcurl",
                 "-lz"
             ],
             "options": {
-                "cwd": "C:\\msys64\\mingw64\\bin"
+                "cwd": "C:/msys64/mingw64/bin"
             },
             "problemMatcher": [
                 "$gcc"
@@ -79,26 +79,26 @@
                 "kind": "build",
                 "isDefault": false
             },
-            "detail": "compiler: C:\\msys64\\mingw64\\bin\\g++.exe"
+            "detail": "compiler: C:/msys64/mingw64/bin/g++.exe"
         },
         {
             "type": "cppbuild",
             "label": "Build HeaderTool Lite x86 Windows",
-            "command": "C:\\msys64\\mingw32\\bin\\g++.exe",
+            "command": "C:/msys64/mingw32/bin/g++.exe",
             "args": [
                 "-static",
                 "-m32",
                 "-fdiagnostics-color=always",
-                "c:/users/brette/documents/headertool/headertooll.cpp",
+                "C:/Users/Administrator/Documents/GitHub/HeaderTool/Source/headertooll.cpp",
                 "-o",
-                "c:/users/brette/documents/headertool/x86/HeaderToolL.exe",
+                "C:/Users/Administrator/Documents/GitHub/HeaderTool/Source/x86/HeaderToolL.exe",
                 "-IC:/msys64/mingw32/include",
                 "-LC:/msys64/mingw32/lib",
                 "-lcurl",
                 "-lz"
             ],
             "options": {
-                "cwd": "C:\\msys64\\mingw32\\bin"
+                "cwd": "C:/msys64/mingw32/bin"
             },
             "problemMatcher": [
                 "$gcc"
@@ -107,7 +107,7 @@
                 "kind": "build",
                 "isDefault": false
             },
-            "detail": "compiler: C:\\msys64\\mingw32\\bin\\g++.exe"
+            "detail": "compiler: C:/msys64/mingw32/bin/g++.exe"
         },
         {
             "label": "build and sign all",
