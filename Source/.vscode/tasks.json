@@ -1,0 +1,133 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "Build HeaderTool x64 Windows",
+            "command": "C:\\msys64\\mingw64\\bin\\g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "c:/users/brette/documents/headertool/headertool.cpp",
+                "-o",
+                "c:/users/brette/documents/headertool/x64/HeaderTool.exe",
+                "-IC:/msys64/mingw64/include",
+                "-LC:/msys64/mingw64/lib",
+                "-lz",
+                "-lcurl"
+            ],
+            "options": {
+                "cwd": "C:\\msys64\\mingw64\\bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "compiler: C:\\msys64\\mingw64\\bin\\g++.exe"
+        },
+        {
+            "type": "cppbuild",
+            "label": "Build HeaderTool x86 Windows",
+            "command": "C:\\msys64\\mingw32\\bin\\g++.exe",
+            "args": [
+                "-m32",
+                "-fdiagnostics-color=always",
+                "c:/users/brette/documents/headertool/headertool.cpp",
+                "-o",
+                "c:/users/brette/documents/headertool/x86/HeaderTool.exe",
+                "-IC:/msys64/mingw32/include",
+                "-LC:/msys64/mingw32/lib",
+                "-lcurl",
+                "-lz"
+            ],
+            "options": {
+                "cwd": "C:\\msys64\\mingw32\\bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "compiler: C:\\msys64\\mingw32\\bin\\g++.exe"
+        },
+        {
+            "type": "cppbuild",
+            "label": "Build HeaderTool Lite x64 Windows",
+            "command": "C:\\msys64\\mingw64\\bin\\g++.exe",
+            "args": [
+                "-static",
+                "-fdiagnostics-color=always",
+                "c:/users/brette/documents/headertool/headertooll.cpp",
+                "-o",
+                "c:/users/brette/documents/headertool/x64/HeaderToolL.exe",
+                "-IC:/msys64/mingw64/include",
+                "-LC:/msys64/mingw64/lib",
+                "-lcurl",
+                "-lz"
+            ],
+            "options": {
+                "cwd": "C:\\msys64\\mingw64\\bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "compiler: C:\\msys64\\mingw64\\bin\\g++.exe"
+        },
+        {
+            "type": "cppbuild",
+            "label": "Build HeaderTool Lite x86 Windows",
+            "command": "C:\\msys64\\mingw32\\bin\\g++.exe",
+            "args": [
+                "-static",
+                "-m32",
+                "-fdiagnostics-color=always",
+                "c:/users/brette/documents/headertool/headertooll.cpp",
+                "-o",
+                "c:/users/brette/documents/headertool/x86/HeaderToolL.exe",
+                "-IC:/msys64/mingw32/include",
+                "-LC:/msys64/mingw32/lib",
+                "-lcurl",
+                "-lz"
+            ],
+            "options": {
+                "cwd": "C:\\msys64\\mingw32\\bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "compiler: C:\\msys64\\mingw32\\bin\\g++.exe"
+        },
+        {
+            "label": "build and sign all",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Build HeaderTool Lite x64 Windows",
+                "Build HeaderTool Lite x86 Windows",
+                "Build HeaderTool x64 Windows",
+                "Build HeaderTool x86 Windows",
+                //"build Debian package x64",
+                //"build Debian package x86",
+                //"sign Windows x64",
+                //"sign Windows x86",
+                //"sign Debian package x64",
+                //"sign Debian package x86"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+        },
+    ]
+}

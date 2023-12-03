@@ -9,10 +9,20 @@
 #include <iostream>                             // error reporting
 #include <fstream>                              // for local FS and writing
 #include <filesystem>                           // for directory rerouting
+#include <thread>                               // for faster downloading
+#include <atomic>                               // memory atomoticy
+#include <mutex>                                // memory safety
 
 #include <curl/curl.h>                          // file downloading
 #include <zlib.h>                               // checksum evaluation
 #include <nlohmann/json.hpp>                    // json handling
+
+
+#ifdef _WIN32
+#include <windows.h> // For Windows-specific code
+#else
+#include <cstdlib>   // For Unix/Linux-specific code
+#endif
 
 
 using namespace std;
@@ -70,6 +80,17 @@ retrieved   : the amount of missing files successfully downloaded
 
 */
 
+//defines
+auto clearScreen = []() {
+#ifdef _WIN32
+    // For Windows
+    system("cls");
+#else
+    // For Unix/Linux
+    system("clear");
+#endif
+};
+
 //functions
 void romheader(fs::path source, fs::path target);
 void getdb(bool download = false, fs::path parentdir = fs::current_path());
@@ -99,7 +120,7 @@ int main(int argc, char* argr[]){
 
     if ((argv[1] == "-h" || argv[1] == "--help") && argc == 2){
         // generic help message (not really sure what I should put here)
-        cout << "HeaderTool 1.5 (x64) [Windows]" << endl
+        cout << "HeaderTool 1.5 (x(x" << (sizeof(void*) == 8) << ") [Windows]" << endl
              << "MIT LICENCSE      :" << fs::absolute("LICENSE") << endl
              << "GITHUB REPOSITORY : "<< github << endl
              << "DISCORD SERVER    : "<< discord << endl;
@@ -331,27 +352,42 @@ void getdb(bool download, fs::path parentdir){
     if (!fs::exists(targetdir)) fs::create_directory(targetdir);
 
     auto checksums = json::parse(headersbuffer);
-    float progress = distance(fs::directory_iterator(targetdir), fs::directory_iterator{});
-    string percentage;
+    atomic<float> progress = distance(fs::directory_iterator(targetdir), fs::directory_iterator{});
+    mutex mtx;
 
-    for (unsigned int checksum : checksums){
-        if (!fs::exists(targetdir/fs::path(to_string(checksum)))){
-            ++progress;
-            vector<char> header = downloadheader(checksum);
-            percentage = to_string((static_cast<unsigned char>((progress / checksums.size()) * 100)));
-            if (header.size() == 1){
-                if (header[0] == -1){
-                    cerr << percentage << "% Unknown Network Error: " << checksum << endl;
-                } else if (header[0] == -2){
-                    cerr << percentage << "% Missing header:        " << checksum << endl;
-                }
-            } else {
-                ofstream headerbuffer(targetdir/to_string(checksum), ios::binary);
-                headerbuffer.write(header.data(), header.size());
-                cout << percentage << "% Downloaded:            " << string(header.begin()+16, header.end()) << endl;
+    auto downloadHeaderThread = [&](unsigned int checksum) {
+        vector<char> header = downloadheader(checksum);
+        string percentage = to_string((static_cast<unsigned char>((progress.load() / checksums.size()) * 100)));
+        if (header.size() == 1){
+            if (header[0] == -1){
+                cerr << percentage << "% Unknown Network Error: " << checksum << endl;
+            } else if (header[0] == -2){
+                cerr << percentage << "% Missing header:        " << checksum << endl;
             }
+        } else {
+            progress.store(progress.load() + 1.0);
+            std::lock_guard<std::mutex> lock(mtx);
+            ofstream headerbuffer(targetdir/to_string(checksum), ios::binary);
+            headerbuffer.write(header.data(), header.size());
+            cout << percentage << "% Downloaded:            " << string(header.begin()+16, header.end()) << endl;
+        }
+    };
+
+    // Create a vector of threads to download headers concurrently
+    vector<thread> threads;
+    for (unsigned int checksum : checksums) {
+        if (!fs::exists(targetdir / fs::path(to_string(checksum)))) {
+            threads.emplace_back(downloadHeaderThread, checksum);
         }
     }
+
+    // Join all threads to ensure they complete before moving on
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    clearScreen();
+    cout << "100% Downloaded, use -l or --local to use local database" << endl;
 }
 
 vector<char> downloadheader(unsigned int checksum){

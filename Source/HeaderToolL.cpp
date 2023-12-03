@@ -1,3 +1,11 @@
+/*
+
+    HeaderTool (lite) by Brette
+
+*/
+
+
+
 #include <filesystem>
 #include <iostream>
 #include <fstream>
@@ -33,7 +41,7 @@ int main(int argc, char* argr[]){
 
     if ((argv[1] == "-h" || argv[1] == "--help") && argc == 2){
         // generic help message (not really sure what I should put here)
-        cout << "HeaderTool 1.5L (x64) [Windows]" << endl
+        cout << "HeaderTool 1.5L (x" << (sizeof(void*) == 8) << ") [Windows]" << endl
              << "MIT LICENCSE      :" << fs::absolute("LICENSE") << endl
              << "GITHUB REPOSITORY : "<< github << endl
              << "DISCORD SERVER    : "<< discord << endl;
