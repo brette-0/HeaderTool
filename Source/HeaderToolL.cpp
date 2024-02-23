@@ -15,8 +15,9 @@
 using namespace std;
 namespace fs = filesystem;
 
-const char github[39] = "https://github.com/brette-0/HeaderTool";
-const char discord[30] = "https://discord.gg/EwfEWcVtzp";
+#define github "https://github.com/brette-0/HeaderTool"
+#define discord "https://discord.gg/EwfEWcVtzp"
+#define LICENSE "https://raw.githubusercontent.com/brette-0/HeaderTool/main/LICENSE"
 
 bool verbose = false, renamerom = true, headerrom = true, clean = false, specified = false;
 bool noskip = false, defaulttoNES = true; // if false, default to FDS
@@ -42,7 +43,7 @@ int main(int argc, char* argr[]){
     if ((argv[1] == "-h" || argv[1] == "--help") && argc == 2){
         // generic help message (not really sure what I should put here)
         cout << "HeaderTool 1.5L (x" << (sizeof(void*) == 8) << ") [Windows]" << endl
-             << "MIT LICENCSE      :" << fs::absolute("LICENSE") << endl
+             << "MIT LICENCSE      :" << LICENSE << endl
              << "GITHUB REPOSITORY : "<< github << endl
              << "DISCORD SERVER    : "<< discord << endl;
         return 0;

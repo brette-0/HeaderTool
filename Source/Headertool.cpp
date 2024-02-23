@@ -30,10 +30,11 @@ using namespace nlohmann;
 namespace fs = filesystem;
 
 // global constants
-const string indexurl = "https://raw.githubusercontent.com/brette-0/HeaderTool/main/index.json";
-const string headerurlprefix = "https://raw.githubusercontent.com/brette-0/HeaderTool/main/headers/";
-const string github = "https://github.com/brette-0/HeaderTool";
-const string discord = "https://discord.gg/EwfEWcVtzp";
+#define indexurl"https://raw.githubusercontent.com/brette-0/HeaderTool/main/index.json"
+#define headerurlprefix "https://raw.githubusercontent.com/brette-0/HeaderTool/main/headers/"
+#define github "https://github.com/brette-0/HeaderTool"
+#define discord "https://discord.gg/EwfEWcVtzp"
+#define LICENSE "https://raw.githubusercontent.com/brette-0/HeaderTool/main/LICENSE"
 
 /* exit codes
 
@@ -128,7 +129,7 @@ int main(int argc, char* argr[]){
     if ((argv[1] == "-h" || argv[1] == "--help") && argc == 2){
         // generic help message (not really sure what I should put here)
         cout << "HeaderTool 1.5 (x(x" << (sizeof(void*) == 8) << ") [Windows]\n"
-             << "MIT LICENCSE      :" << fs::absolute("LICENSE") << '\n'
+             << "MIT LICENCSE      :" << LICENSE << '\n'
              << "GITHUB REPOSITORY : "<< github << '\n'
              << "DISCORD SERVER    : "<< discord << '\n';
         return 0;
